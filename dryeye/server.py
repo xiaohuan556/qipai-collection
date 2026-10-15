@@ -616,27 +616,33 @@ def get_room(room_id):
         return ROOMS.get(room_id or '')
 
 
-def room_list():
+def room_list(bid=None):
     with ROOMS_LOCK:
         items = list(ROOMS.items())
     result = []
     for room_id, info in reversed(items):
         game = info['game']
         with game.lock:
+            owner = game.players[0] if game.players else None
+            owns_by_browser = bool(bid and owner and owner.get('bid') == bid)
             result.append({'id': room_id, 'name': info['name'],
                            'creator': info['creator'], 'players': len(game.players),
-                           'max_players': MAX_PLAYERS, 'phase': game.phase})
+                           'max_players': MAX_PLAYERS, 'phase': game.phase,
+                           'owned': owns_by_browser,
+                           'owner_pid': owner['pid'] if owns_by_browser else ''})
     return result
 
 
-def delete_room(room_id, pid):
+def delete_room(room_id, pid, bid=None):
     with ROOMS_LOCK:
         info = ROOMS.get(room_id or '')
         if not info:
             return {'err': '房间不存在'}
         game = info['game']
         with game.lock:
-            if not game.players or game.players[0]['pid'] != pid:
+            owner = game.players[0] if game.players else None
+            owns_by_browser = bool(bid and owner and owner.get('bid') == bid)
+            if not owner or (owner['pid'] != pid and not owns_by_browser):
                 return {'err': '只有房主可以删除房间'}
         ROOMS.pop(room_id, None)
     return {'err': None, 'ok': True}
@@ -662,7 +668,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         if u.path == '/api/rooms':
-            self._json({'rooms': room_list()})
+            qs = parse_qs(u.query)
+            self._json({'rooms': room_list((qs.get('bid') or [''])[0])})
             return
         if u.path == '/api/state':
             qs = parse_qs(u.query)
@@ -701,7 +708,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(create_room(data.get('room_name'), data.get('name'), data.get('bid', '')))
             return
         if path == '/api/delete-room':
-            self._json(delete_room(data.get('room'), data.get('pid', '')))
+            self._json(delete_room(data.get('room'), data.get('pid', ''), data.get('bid', '')))
             return
         info = get_room(data.get('room'))
         if not info:

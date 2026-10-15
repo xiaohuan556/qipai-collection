@@ -62,6 +62,7 @@
   .transfers { text-align: left; max-width: 460px; margin: 8px auto; font-size: 15px; line-height: 2; }
   .mymoney { font-size: 17px; font-weight: 700; margin: 10px 0; }
   .room-gate{max-width:720px}.room-create{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.room-list{display:grid;gap:8px;margin-top:14px}.room-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #d8e0e8;border-radius:10px;padding:10px 12px;background:#f7f9fb;text-align:left}.room-row .meta{font-size:12px;color:#718096;margin-top:3px}
+  body.choosing-room #lobby,body.choosing-room #assign,body.choosing-room #reveal,body.choosing-room #settled,body.choosing-room #waiting{display:none!important}
   @media(max-width:680px){
     :root{--felt:#123e2d;--felt-deep:#071a12;--ivory:#f4f0e6;--gold:#d8b96f;--muted:#9db1a5}
     html{background:var(--felt-deep)}body{min-height:100dvh;padding:12px 10px calc(88px + env(safe-area-inset-bottom));color:var(--ivory);background:radial-gradient(circle at 50% -10%,#285e49 0,#0f3022 38%,#06150e 80%)}
@@ -96,7 +97,7 @@
   </div>
   <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
 </div>
-<div style="margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button><button id="roomDeleteBtn" class="warn" style="display:none" onclick="deleteRoom()">删除本房间</button></div>
+<div style="margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- 会议入口 -->
 <div class="panel" id="lobby">
@@ -288,11 +289,12 @@ async function api(path, body) {
 function escRoom(s){ return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 async function pollRooms(){
   try{
-    const j = await (await fetch('/api/rooms',{cache:'no-store'})).json();
+    const j = await (await fetch('/api/rooms?bid='+encodeURIComponent(bidGet()),{cache:'no-store'})).json();
     const rooms = j.rooms || [];
     document.getElementById('roomList').innerHTML = rooms.length ? rooms.map(r=>
       '<div class="room-row"><div><b>'+escRoom(r.name)+'</b><div class="meta">房主：'+escRoom(r.creator)+' · '+r.players+'/'+r.max_players+' 人 · '+(r.phase==='lobby'?'等待中':'进行中')+'</div></div>'+
-      '<button '+(r.players>=r.max_players?'disabled':'')+' onclick="openRoom(\''+r.id+'\')">进入</button></div>'
+      '<div><button '+(r.players>=r.max_players && !r.owned?'disabled':'')+' onclick="openRoom(\''+r.id+'\',\''+(r.owner_pid||'')+'\')">进入</button>'+
+      (r.owned?'<button class="warn" onclick="deleteOwnedRoom(\''+r.id+'\')">删除</button>':'')+'</div></div>'
     ).join('') : '<div class="hint">还没有房间，你可以创建第一个。</div>';
   }catch(e){ document.getElementById('roomList').innerHTML='<div class="hint">房间列表暂时连接不上</div>'; }
 }
@@ -304,19 +306,19 @@ async function createRoom(){
   if(r.error) return alert(r.error);
   room=r.room; pid=r.pid; localStorage.setItem('poker_room',room); localStorage.setItem('poker_pid',pid); S=null; await poll();
 }
-function openRoom(id){ room=id; pid=''; S=null; localStorage.setItem('poker_room',room); localStorage.removeItem('poker_pid'); poll(); }
+function openRoom(id, ownerPid){ room=id; pid=ownerPid||''; S=null; localStorage.setItem('poker_room',room); if(pid)localStorage.setItem('poker_pid',pid);else localStorage.removeItem('poker_pid'); poll(); }
 function leaveRoom(){ room=''; pid=''; S=null; groups={bi:[],shi:[],zha:[]}; localStorage.removeItem('poker_room'); localStorage.removeItem('poker_pid'); renderRoomGate(); pollRooms(); }
-async function deleteRoom(){
-  if(!S || !S.is_host || !confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和记录无法恢复。')) return;
-  const r=await api('/api/delete-room',{pid:pid});
+async function deleteOwnedRoom(roomId){
+  if(!confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和记录无法恢复。')) return;
+  const r=await (await fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:bidGet()})})).json();
   if(r.error) return alert(r.error);
-  leaveRoom();
+  if(room===roomId) leaveRoom(); else pollRooms();
 }
 function renderRoomGate(){
   const choosing=!room;
+  document.body.classList.toggle('choosing-room',choosing);
   document.getElementById('roomGate').style.display=choosing?'block':'none';
   document.getElementById('roomSwitchBtn').style.display=choosing?'none':'inline-block';
-  document.getElementById('roomDeleteBtn').style.display=(!choosing && S && S.is_host)?'inline-block':'none';
   if(choosing){ ['lobby','assign','reveal','settled','waiting'].forEach(id=>document.getElementById(id).style.display='none'); document.getElementById('abortBtn').style.display='none'; }
 }
 

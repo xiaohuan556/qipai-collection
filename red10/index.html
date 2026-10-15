@@ -126,7 +126,7 @@
   </div>
   <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
 </div>
-<div style="text-align:center;margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button><button id="roomDeleteBtn" class="warn" style="display:none" onclick="deleteRoom()">删除本房间</button></div>
+<div style="text-align:center;margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- ============ 大厅 ============ -->
 <div class="panel" id="lobby">
@@ -287,11 +287,13 @@ async function api(path, body){
 function escRoom(s){ return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 async function pollRooms(){
   try{
-    const j = await (await fetch('/api/rooms',{cache:'no-store'})).json();
+    const bid = localStorage.getItem('hs_bid') || '';
+    const j = await (await fetch('/api/rooms?bid='+encodeURIComponent(bid),{cache:'no-store'})).json();
     const rooms = j.rooms || [];
     document.getElementById('roomList').innerHTML = rooms.length ? rooms.map(r=>
       '<div class="room-row"><div><b>'+escRoom(r.name)+'</b><div class="meta">房主：'+escRoom(r.creator)+' · '+r.players+'/'+r.max_players+' 人 · '+(r.phase==='join'?'等待中':'游戏中')+'</div></div>'+
-      '<button '+(r.players>=r.max_players?'disabled':'')+' onclick="openRoom(\''+r.id+'\')">进入</button></div>'
+      '<div><button '+(r.players>=r.max_players && !r.owned?'disabled':'')+' onclick="openRoom(\''+r.id+'\',\''+(r.owner_pid||'')+'\')">进入</button>'+
+      (r.owned?'<button class="warn" onclick="deleteOwnedRoom(\''+r.id+'\')">删除</button>':'')+'</div></div>'
     ).join('') : '<div class="hint">还没有房间，你可以创建第一个。</div>';
   }catch(e){ document.getElementById('roomList').innerHTML='<div class="hint">房间列表暂时连接不上</div>'; }
 }
@@ -305,18 +307,18 @@ async function createRoom(){
   if(r.error) return;
   room=r.room; pid=r.pid; localStorage.setItem('hs_room',room); localStorage.setItem('hs_pid',pid); S=null; poll();
 }
-function openRoom(id){ room=id; pid=''; S=null; localStorage.setItem('hs_room',room); localStorage.removeItem('hs_pid'); poll(); }
+function openRoom(id, ownerPid){ room=id; pid=ownerPid||''; S=null; localStorage.setItem('hs_room',room); if(pid)localStorage.setItem('hs_pid',pid);else localStorage.removeItem('hs_pid'); poll(); }
 function leaveRoom(){ room=''; pid=''; S=null; sel.clear(); localStorage.removeItem('hs_room'); localStorage.removeItem('hs_pid'); renderRoomGate(); pollRooms(); }
-async function deleteRoom(){
-  if(!S || !S.is_host || !confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和账目无法恢复。')) return;
-  const r=await api('/api/delete-room',{pid:pid});
-  if(!r.error) leaveRoom();
+async function deleteOwnedRoom(roomId){
+  if(!confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和账目无法恢复。')) return;
+  const r=await (await fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:localStorage.getItem('hs_bid')||''})})).json();
+  if(r.error) return toast(r.error);
+  if(room===roomId) leaveRoom(); else pollRooms();
 }
 function renderRoomGate(){
   const choosing=!room;
   document.getElementById('roomGate').style.display=choosing?'block':'none';
   document.getElementById('roomSwitchBtn').style.display=choosing?'none':'inline-block';
-  document.getElementById('roomDeleteBtn').style.display=(!choosing && S && S.is_host)?'inline-block':'none';
   if(choosing){ ['lobby','declare','play','result','waiting'].forEach(id=>document.getElementById(id).style.display='none'); document.getElementById('abortBtn').style.display='none'; }
 }
 async function join(){

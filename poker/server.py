@@ -494,27 +494,33 @@ def get_room(room_id):
         return ROOMS.get(room_id or "")
 
 
-def room_list():
+def room_list(bid=None):
     with ROOMS_LOCK:
         items = list(ROOMS.items())
     result = []
     for room_id, info in reversed(items):
         game = info["game"]
         with game.lock:
+            owner_pid = game.order[0] if game.order else ""
+            owned = bool(bid and owner_pid and game.bids.get(bid) == owner_pid)
             result.append({"id": room_id, "name": info["name"],
                            "creator": info["creator"], "players": len(game.order),
-                           "max_players": MAX_PLAYERS, "phase": game.phase})
+                           "max_players": MAX_PLAYERS, "phase": game.phase,
+                           "owned": owned,
+                           "owner_pid": owner_pid if owned else ""})
     return result
 
 
-def delete_room(room_id, pid):
+def delete_room(room_id, pid, bid=None):
     with ROOMS_LOCK:
         info = ROOMS.get(room_id or "")
         if not info:
             return {"error": "房间不存在"}
         game = info["game"]
         with game.lock:
-            if not game.order or game.order[0] != pid:
+            owner_pid = game.order[0] if game.order else ""
+            owns_by_browser = bool(bid and owner_pid and game.bids.get(bid) == owner_pid)
+            if not owner_pid or (owner_pid != pid and not owns_by_browser):
                 return {"error": "只有房主可以删除房间"}
         ROOMS.pop(room_id, None)
     return {"ok": True}
@@ -556,7 +562,8 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
         elif u.path == "/api/rooms":
-            self._send({"rooms": room_list()})
+            q = parse_qs(u.query)
+            self._send({"rooms": room_list((q.get("bid") or [""])[0])})
         elif u.path == "/api/state":
             q = parse_qs(u.query)
             pid = (q.get("pid") or [""])[0]
@@ -585,7 +592,7 @@ class H(BaseHTTPRequestHandler):
             self._send(create_room(data.get("room_name"), data.get("name"), data.get("bid")))
             return
         if self.path == "/api/delete-room":
-            self._send(delete_room(data.get("room"), data.get("pid")))
+            self._send(delete_room(data.get("room"), data.get("pid"), data.get("bid")))
             return
         info = get_room(data.get("room"))
         if not info:

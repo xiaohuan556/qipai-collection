@@ -93,7 +93,7 @@ button { border-radius:9px; border:1px solid transparent; }
 .overlay { background:rgba(38,54,72,.32); }
 .panel { background:#fff; border:1px solid #e2e3e7; color:#263648; border-radius:12px; box-shadow:0 7px 22px rgba(30,49,72,.06); }
 .panel h2 { color:#263648; }
-input[type=text], input[type=number] { background:#fff; border:1px solid #c9d4df; color:#263648; }
+input[type=text], input[type=number] { background:#fff; border:1px solid #c9d4df; color:#263648; caret-color:#263648; -webkit-text-fill-color:#263648; }
 input::placeholder { color:#94a1af; }
 .chip { background:#f0f4f8; color:#526579; border:1px solid #dce4ec; }
 table.res th, table.res td { border-bottom-color:#e4e9ef; }
@@ -114,7 +114,7 @@ details summary { color:#34475b; }
   .hand-toolbar{display:flex;align-items:center;justify-content:center;gap:5px;margin:0 auto 2px}.hand-toolbar span{font-size:10px;color:#8fa398;margin-right:2px}.hand-toolbar button{min-height:27px;padding:4px 9px;margin:0;border-radius:999px;font-size:10px;font-weight:650}.hand-toolbar button.active{color:#1c211e;background:linear-gradient(145deg,#e2c984,#b1843e);border-color:transparent}
   .actions{gap:8px;padding:3px 0 0}.actions button{min-width:104px;min-height:42px;padding:8px 16px}
   .log{margin-top:7px;max-height:72px;color:#b7c6bd;background:rgba(0,0,0,.16);border-color:rgba(255,255,255,.08)}details{color:#bfcac4;background:rgba(0,0,0,.15);border-color:rgba(255,255,255,.08)}details summary{color:#d9c590}
-  .panel{padding:18px 14px;border-radius:18px;color:#edf3ef;background:linear-gradient(155deg,rgba(18,57,41,.98),rgba(7,27,19,.98));border-color:rgba(226,197,127,.16);box-shadow:0 15px 40px rgba(0,0,0,.32)}.panel h2{color:#fff;font-size:18px}input[type=text],input[type=number]{min-height:44px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff}input::placeholder{color:#8da095}.chip{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:#d1dcd5}.overlay{background:rgba(1,10,6,.72)}table.res th{color:#c7d2cb;background:rgba(255,255,255,.07)}table.res th,table.res td{border-color:rgba(255,255,255,.1)}table.res .win td{color:#e0c47d}.toast{color:#eef4f0;background:#112d21;border-color:rgba(255,255,255,.15)}.err{color:#ff9790}
+  .panel{padding:18px 14px;border-radius:18px;color:#edf3ef;background:linear-gradient(155deg,rgba(18,57,41,.98),rgba(7,27,19,.98));border-color:rgba(226,197,127,.16);box-shadow:0 15px 40px rgba(0,0,0,.32)}.panel h2{color:#fff;font-size:18px}input[type=text],input[type=number]{min-height:44px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#fff;caret-color:#fff;-webkit-text-fill-color:#fff}input::placeholder{color:#8da095;-webkit-text-fill-color:#8da095}.chip{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:#d1dcd5}.overlay{background:rgba(1,10,6,.72)}table.res th{color:#c7d2cb;background:rgba(255,255,255,.07)}table.res th,table.res td{border-color:rgba(255,255,255,.1)}table.res .win td{color:#e0c47d}.toast{color:#eef4f0;background:#112d21;border-color:rgba(255,255,255,.15)}.err{color:#ff9790}
 }
 </style>
 </head>
@@ -125,7 +125,7 @@ var room = localStorage.gy_room || '';
 var pid = localStorage.gy_pid || null;
 var bid = localStorage.gy_bid || (localStorage.gy_bid = Math.random().toString(36).slice(2, 12));
 var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null, offlinePreview = false;
-var rooms = [], lastViewKey = '', homeMode = false;
+var rooms = [], lastRoomsKey = '', lastViewKey = '', homeMode = false;
 var handSortMode = localStorage.gy_hand_sort || 'smart';
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -191,7 +191,21 @@ function handToolbarHtml(){
 
 function render(){
   var app = document.getElementById('app');
-  if (!room){ app.innerHTML = roomsView(); return; }
+  if (!room){
+    var oldCreator = document.getElementById('creator');
+    var oldRoomName = document.getElementById('roomName');
+    var creatorDraft = oldCreator ? oldCreator.value : '';
+    var roomNameDraft = oldRoomName ? oldRoomName.value : '';
+    var focusedId = document.activeElement && document.activeElement.id;
+    app.innerHTML = roomsView();
+    var newCreator = document.getElementById('creator');
+    var newRoomName = document.getElementById('roomName');
+    if(newCreator) newCreator.value = creatorDraft;
+    if(newRoomName) newRoomName.value = roomNameDraft;
+    var focused = focusedId && document.getElementById(focusedId);
+    if(focused){ focused.focus(); focused.setSelectionRange(focused.value.length, focused.value.length); }
+    return;
+  }
   var oldNameInput = document.getElementById('nm');
   var draftName = oldNameInput ? oldNameInput.value : '';
   var nameWasFocused = !!(oldNameInput && document.activeElement === oldNameInput);
@@ -219,7 +233,8 @@ function roomsView(){
     var status = r.phase === 'lobby' ? '等待中' : '游戏中';
     return '<div class="panel" style="max-width:620px;margin:8px auto;display:flex;align-items:center;justify-content:space-between;gap:10px">' +
       '<div><b>' + esc(r.name) + '</b><div class="msg" style="text-align:left">房主：' + esc(r.creator) + ' · ' + r.players + '/' + r.max_players + ' 人 · ' + status + '</div></div>' +
-      '<button class="btn-gold" ' + (r.players >= r.max_players ? 'disabled' : '') + ' onclick="openRoom(\'' + r.id + '\')">进入</button></div>';
+      '<div><button class="btn-gold" ' + (r.players >= r.max_players && !r.owned ? 'disabled' : '') + ' onclick="openRoom(\'' + r.id + '\',\'' + (r.owner_pid||'') + '\')">进入</button>' +
+      (r.owned ? '<button class="btn-red" onclick="deleteOwnedRoom(\'' + r.id + '\')">删除</button>' : '') + '</div></div>';
   }).join('') : '<div class="msg" style="margin:24px">还没有房间，你可以创建第一个。</div>';
   return '<div class="topbar"><h1>👁️ 干瞪眼</h1><span class="badge">房间大厅</span><div class="spacer"></div></div>' +
     '<div class="panel" style="max-width:620px;margin:10vh auto 16px"><h2>创建房间</h2>' +
@@ -229,7 +244,11 @@ function roomsView(){
 }
 
 function pollRooms(){
-  fetch('/api/rooms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ rooms=j.rooms||[]; lastViewKey=''; render(); }).catch(function(){});
+  fetch('/api/rooms?bid='+encodeURIComponent(bid),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    var next=j.rooms||[], key=JSON.stringify(next);
+    if(key===lastRoomsKey) return;
+    rooms=next; lastRoomsKey=key; lastViewKey=''; render();
+  }).catch(function(){});
 }
 function doCreateRoom(){
   var name=document.getElementById('creator').value.trim();
@@ -240,11 +259,12 @@ function doCreateRoom(){
     room=j.room; pid=j.pid; localStorage.gy_room=room; localStorage.gy_pid=pid; S=null; lastViewKey=''; poll();
   });
 }
-function openRoom(id){ room=id; pid=null; S=null; localStorage.gy_room=room; localStorage.removeItem('gy_pid'); lastViewKey=''; poll(); }
-function leaveRoom(){ room=''; pid=null; S=null; sel={}; selN=0; homeMode=false; localStorage.removeItem('gy_room'); localStorage.removeItem('gy_pid'); lastViewKey=''; pollRooms(); }
-function deleteRoom(){
-  if(!S || !S.is_host || !confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和积分无法恢复。')) return;
-  api('/api/delete-room',{pid:pid},function(j){ if(j&&j.err) toast(j.err,true); else leaveRoom(); });
+function openRoom(id, ownerPid){ room=id; pid=ownerPid||null; S=null; localStorage.gy_room=room; if(pid)localStorage.gy_pid=pid;else localStorage.removeItem('gy_pid'); lastViewKey=''; poll(); }
+function leaveRoom(){ room=''; pid=null; S=null; sel={}; selN=0; homeMode=false; localStorage.removeItem('gy_room'); localStorage.removeItem('gy_pid'); lastRoomsKey=''; lastViewKey=''; render(); pollRooms(); }
+function deleteOwnedRoom(roomId){
+  if(!confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和积分无法恢复。')) return;
+  fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:bid})})
+    .then(function(r){return r.json();}).then(function(j){ if(j&&j.err) toast(j.err,true); else { lastRoomsKey=''; if(room===roomId)leaveRoom();else pollRooms(); } });
 }
 
 function homeView(){
@@ -259,8 +279,7 @@ function homeView(){
 }
 
 function lobbyView(){
-  var lobbyActions = '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="leaveRoom()">← 返回房间列表</button>' +
-    (S.is_host ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="deleteRoom()">删除本房间</button>' : '');
+  var lobbyActions = '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="leaveRoom()">← 返回房间列表</button>';
   var h = '<div class="topbar"><h1>👁️ 干瞪眼</h1><span class="badge">' + esc(S.room_name||'房间') + ' · 房主 ' + esc(S.room_creator||'') + ' · 底分 ¥' + S.base + '</span><div class="spacer"></div>' + lobbyActions + '</div>';
   if (offlinePreview){
     h += '<div class="panel" style="max-width:520px;margin:12vh auto 0;text-align:center">' +
@@ -315,7 +334,6 @@ function gameView(){
     (S.bombs ? '<span class="badge">炸弹×' + S.bombs + '（已翻倍）</span>' : '') +
     '<div class="spacer"></div>' +
     '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="leaveRoom()">← 返回房间列表</button>' +
-    (S.is_host ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="deleteRoom()">删除本房间</button>' : '') +
     (S.you ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">结束当前牌局</button>' :
       (S.phase !== 'lobby' ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">恢复牌桌</button>' : '')) +
     '</div>';

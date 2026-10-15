@@ -643,16 +643,20 @@ def create_room(room_name, creator, bid):
     return {"ok": True, "room": room_id, "pid": joined["pid"]}
 
 
-def room_list():
+def room_list(bid=None):
     with ROOMS_LOCK:
         items = list(ROOMS.items())
     result = []
     for room_id, info in items:
         game = info["game"]
         with game.lock:
+            owner_pid = game.order[0] if game.order else ""
+            owns_by_browser = bool(bid and owner_pid and game.p.get(owner_pid, {}).get("bid") == bid)
             result.append({"id": room_id, "name": info["name"],
                            "creator": info["creator"], "players": len(game.order),
-                           "max_players": 4, "phase": game.phase})
+                           "max_players": 4, "phase": game.phase,
+                           "owned": owns_by_browser,
+                           "owner_pid": owner_pid if owns_by_browser else ""})
     result.sort(key=lambda x: ROOMS[x["id"]]["created"], reverse=True)
     return result
 
@@ -663,14 +667,16 @@ def get_room(room_id):
     return info
 
 
-def delete_room(room_id, pid):
+def delete_room(room_id, pid, bid=None):
     with ROOMS_LOCK:
         info = ROOMS.get(room_id or "")
         if not info:
             return {"error": "房间不存在"}
         game = info["game"]
         with game.lock:
-            if not game.order or game.order[0] != pid:
+            owner_pid = game.order[0] if game.order else ""
+            owns_by_browser = bool(bid and owner_pid and game.p.get(owner_pid, {}).get("bid") == bid)
+            if not owner_pid or (owner_pid != pid and not owns_by_browser):
                 return {"error": "只有房主可以删除房间"}
         ROOMS.pop(room_id, None)
     return {"ok": True}
@@ -766,7 +772,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(500, "index.html 读取失败: %s" % e, "text/plain; charset=utf-8")
             return
         if u.path == "/api/rooms":
-            self._send(200, json.dumps({"rooms": room_list()}, ensure_ascii=False))
+            q = parse_qs(u.query)
+            self._send(200, json.dumps({"rooms": room_list((q.get("bid") or [""])[0])}, ensure_ascii=False))
             return
         if u.path == "/api/state":
             q = parse_qs(u.query)
@@ -797,7 +804,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(res, ensure_ascii=False))
             return
         if u.path == "/api/delete-room":
-            res = delete_room(data.get("room"), data.get("pid"))
+            res = delete_room(data.get("room"), data.get("pid"), data.get("bid"))
             self._send(200, json.dumps(res, ensure_ascii=False))
             return
         fn = ROUTES.get(u.path)
