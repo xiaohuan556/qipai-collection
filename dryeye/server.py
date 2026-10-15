@@ -694,6 +694,20 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
+        if u.path == '/dealer.png':
+            fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dealer.png')
+            try:
+                with open(fp, 'rb') as f:
+                    body = f.read()
+            except OSError:
+                self._json({'err': 'not found'}, 404)
+                return
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/png')
+            self.send_header('Content-Length', str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         self._json({'err': 'not found'}, 404)
 
     def do_POST(self):

@@ -34,6 +34,15 @@
   .nav button::after{font-size:10px;letter-spacing:.08em}
   .nav button.active::before{box-shadow:0 7px 20px rgba(79,111,213,.42),inset 0 1px rgba(255,255,255,.55)}
 }
+@media(max-width:700px){
+  :root{--mobile-deep:#050c08;--mobile-ink:#f2f6f2;--mobile-accent:#72d6a3}
+  body{background:radial-gradient(circle at 50% -10%,#22583f 0,#0c261a 42%,var(--mobile-deep) 100%)}
+  body::before{background:radial-gradient(circle at 16% 14%,rgba(78,196,139,.14),transparent 29%),radial-gradient(circle at 88% 34%,rgba(44,137,92,.12),transparent 31%)}
+  .nav{border-color:rgba(131,193,160,.18);background:linear-gradient(145deg,rgba(15,42,29,.92),rgba(5,16,10,.96));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px rgba(255,255,255,.07)}
+  .nav::before{background:linear-gradient(90deg,transparent,rgba(174,226,198,.48),transparent)}
+  .nav button{color:#789383}.nav button::before{border-color:rgba(152,203,176,.12);background:rgba(255,255,255,.045)}
+  .nav button.active{color:#a9e2c3}.nav button.active::before{border-color:#9ad8b8;background:linear-gradient(145deg,#8cdeb3,#3b9569);color:#06130c;box-shadow:0 7px 20px rgba(45,143,96,.42),inset 0 1px rgba(255,255,255,.5)}
+}
 </style>
 </head>
 <body>

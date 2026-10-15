@@ -92,6 +92,7 @@
   #toast.show{opacity:.93}
   .room-gate{max-width:720px;margin:18px auto}.room-create{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.room-create input{min-width:150px}
   .room-list{display:grid;gap:8px;margin-top:14px}.room-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafafb}.room-row .meta{font-size:12px;color:var(--sub)}
+  .dealer-art{display:none}
   @media(max-width:680px){
     :root{--bg:#080c18;--panel:rgba(15,22,45,.94);--line:rgba(151,178,240,.18);--txt:#f3f6ff;--sub:#9ca9c9;--blue:#83a8ff;--gold:#83a8ff;--green:#69d1bb;--red:#ff747b}
     html{background:#080c18}body{min-height:100dvh;padding:12px 10px calc(94px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% -8%,#293f7d 0,#141d3b 34%,#080c18 76%);text-align:left}
@@ -131,6 +132,23 @@
     .pill{border:1px solid rgba(160,184,244,.1);box-shadow:inset 0 1px rgba(255,255,255,.04)}
     details.rules{border-radius:15px;background:rgba(255,255,255,.025);border:1px solid rgba(158,181,240,.09);padding:9px 11px}
   }
+  @media(max-width:680px){
+    :root{--bg:#050c08;--panel:rgba(8,29,19,.94);--line:rgba(132,194,160,.18);--txt:#f2f6f2;--sub:#96ad9f;--blue:#70d1a1;--gold:#70d1a1;--green:#70d1a1;--red:#ff747b}
+    body{background-image:radial-gradient(circle at 12% 4%,rgba(75,184,128,.25),transparent 29%),radial-gradient(circle at 92% 28%,rgba(39,128,84,.15),transparent 31%),linear-gradient(165deg,#123c29 0,#081c12 56%,#040a06 100%)}
+    body::before{background-image:linear-gradient(rgba(188,230,207,.023) 1px,transparent 1px),linear-gradient(90deg,rgba(188,230,207,.023) 1px,transparent 1px)}
+    body>h1{color:#f4f8f4;-webkit-text-fill-color:#f4f8f4;text-shadow:0 0 26px rgba(87,191,136,.2)}body>.sub{color:#8ca496}
+    .panel{border-color:rgba(136,198,164,.17);background:linear-gradient(145deg,rgba(17,56,37,.84),rgba(5,21,13,.93));box-shadow:0 22px 54px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.055)}
+    .panel::before{background:linear-gradient(90deg,transparent,rgba(177,225,200,.46),transparent)}
+    button{background:linear-gradient(145deg,#8addb1,#3b976b);color:#06130c;box-shadow:0 8px 22px rgba(29,112,72,.3),inset 0 1px rgba(255,255,255,.4)}button.ghost{color:#e9f2ec;border-color:rgba(142,199,168,.16)}button.jiu{color:#06130c;background:linear-gradient(145deg,#9ee0ba,#4a9f73)}
+    input{border-color:rgba(141,200,168,.16)}input::placeholder{color:#859b8e}input:focus{border-color:#78d2a4;box-shadow:0 0 0 3px rgba(70,180,124,.15),inset 0 1px 4px rgba(0,0,0,.18)}
+    .room-row{border-color:rgba(138,197,165,.12)}.room-row::before{background:linear-gradient(#91dcb3,#37956a);box-shadow:0 0 12px rgba(65,171,113,.5)}.room-row .meta{color:#91a99b}
+    .seat{border-color:rgba(138,197,165,.11)}.seat.me,.seat.turn{background:linear-gradient(145deg,rgba(95,196,143,.17),rgba(44,109,75,.1));border-color:rgba(111,207,157,.34);box-shadow:0 0 0 2px rgba(91,190,139,.12),0 0 24px rgba(39,139,88,.16)}
+    .pill{border-color:rgba(138,197,165,.11);color:#bdcec4}.board{border-color:rgba(125,198,159,.2);outline-color:rgba(96,168,130,.12);background:radial-gradient(ellipse at 50% 44%,#257a52 0,#155139 48%,#092a1b 100%);box-shadow:inset 0 0 52px rgba(1,12,7,.48),inset 0 1px rgba(211,241,224,.14),0 14px 34px rgba(0,0,0,.28)}.board .lbl{color:#a8c3b3}
+    .hand .card.sel,.card.reorder-picked{box-shadow:0 0 0 2px #72d2a2,0 10px 22px rgba(35,137,83,.38),inset 0 1px #fff}
+    details.rules{border-color:rgba(137,196,164,.1)}details.rules summary{color:#9fb7a9}details.rules div{color:#c7d6cd}.strategy-note{background:rgba(83,183,128,.09);border-color:rgba(83,183,128,.25);color:#c3e3d1}.guide-card{border-color:rgba(137,196,164,.1)}
+    body.choosing-room .dealer-art{display:flex}.dealer-art{width:142px;height:142px;margin:-4px 13px 2px auto;position:relative;align-items:center;justify-content:center;filter:drop-shadow(0 18px 22px rgba(0,0,0,.28));animation:dealerFloat 3.8s ease-in-out infinite}.dealer-art img{width:100%;height:100%;object-fit:contain}.dealer-art span{position:absolute;right:0;bottom:4px;padding:4px 9px;border:1px solid rgba(143,205,172,.2);border-radius:999px;background:rgba(6,25,15,.76);color:#b8dcc7;font-size:9px;letter-spacing:.08em;backdrop-filter:blur(10px)}
+    @keyframes dealerFloat{50%{transform:translateY(-5px)}}
+  }
 </style>
 </head>
 <body>
@@ -148,6 +166,7 @@
   </div>
   <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
 </div>
+<div class="dealer-art" aria-hidden="true"><img src="dealer.png" alt=""><span>荷官在线</span></div>
 <div style="text-align:center;margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- ============ 大厅 ============ -->
@@ -339,6 +358,7 @@ async function deleteOwnedRoom(roomId){
 }
 function renderRoomGate(){
   const choosing=!room;
+  document.body.classList.toggle('choosing-room',choosing);
   document.getElementById('roomGate').style.display=choosing?'block':'none';
   document.getElementById('roomSwitchBtn').style.display=choosing?'none':'inline-block';
   if(choosing){ ['lobby','declare','play','result','waiting'].forEach(id=>document.getElementById(id).style.display='none'); document.getElementById('abortBtn').style.display='none'; }

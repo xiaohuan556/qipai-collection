@@ -561,6 +561,17 @@ class H(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        elif u.path == "/dealer.png":
+            fp = ROOT / "dealer.png"
+            if not fp.exists():
+                self._send({"error": "not found"}, 404)
+                return
+            body = fp.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
         elif u.path == "/api/rooms":
             q = parse_qs(u.query)
             self._send({"rooms": room_list((q.get("bid") or [""])[0])})

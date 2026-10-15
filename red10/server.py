@@ -771,6 +771,13 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._send(500, "index.html 读取失败: %s" % e, "text/plain; charset=utf-8")
             return
+        if u.path == "/dealer.png":
+            try:
+                with open(os.path.join(HERE, "dealer.png"), "rb") as f:
+                    self._send(200, f.read(), "image/png")
+            except OSError:
+                self._send(404, "not found", "text/plain; charset=utf-8")
+            return
         if u.path == "/api/rooms":
             q = parse_qs(u.query)
             self._send(200, json.dumps({"rooms": room_list((q.get("bid") or [""])[0])}, ensure_ascii=False))
