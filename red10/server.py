@@ -218,6 +218,8 @@ class Game:
 
     # ---------- 发牌
     def start(self, pid):
+        if pid not in self.p:
+            return {"error": "请先加入房间"}
         if len(self.order) < 4:
             return {"error": "需要 4 个人才能开始（现在 %d 人）" % len(self.order)}
         if self.phase in ("declare", "play"):
@@ -525,6 +527,8 @@ class Game:
 
     # ---------- 下一局
     def next_round(self, pid):
+        if pid not in self.p:
+            return {"error": "请先加入房间"}
         if self.phase != "result":
             return {"error": "这局还没结束"}
         self._deal()

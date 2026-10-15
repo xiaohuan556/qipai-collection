@@ -220,9 +220,15 @@ function lobbyView(){
         '<div class="row"><button class="btn-ghost" onclick="doAddBot()">+ 电脑玩家</button>' +
         '<button class="btn-ghost" onclick="doDelBot()">- 电脑玩家</button></div>' +
         '<div class="row"><button class="btn-gold" style="font-size:18px;padding:12px 40px" onclick="doStart()">开始游戏</button></div>' +
+        '<div class="msg">任意已加入玩家都可以开始</div>' +
         '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">清空房间重新开始</button></div></div>';
+    } else if (pidInList()) {
+      h += '<div class="panel" style="max-width:460px;margin:20px auto 0">' +
+        '<h2>等待开始</h2>' +
+        '<div class="row"><button class="btn-gold" style="font-size:18px;padding:12px 40px" onclick="doStart()">开始游戏</button></div>' +
+        '<div class="msg">至少 2 名玩家，任意已加入玩家都可以开始</div></div>';
     } else {
-      h += '<div class="msg" style="margin-top:30px">等待庄家开始游戏…（至少 2 名玩家）</div>';
+      h += '<div class="msg" style="margin-top:30px">加入房间后即可开始游戏</div>';
     }
   }
   h += rulesHtml();
@@ -311,12 +317,9 @@ function resultsHtml(){
     else h += '<tr class="lose"><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>×' + row.mult + '</td><td>-¥' + row.pay + '</td><td>¥' + sc + '</td></tr>';
   });
   h += '</table><div style="font-size:12px;opacity:.75;text-align:center">结算：剩余张数 × 底分 × 2（输牌翻倍）× 每张剩王再翻倍 × 每个炸弹再翻倍</div>';
-  if (S.is_host){
-    h += '<div class="row" style="margin-top:14px"><button class="btn-gold" style="font-size:17px;padding:11px 36px" onclick="doNext()">下一局（赢家坐庄）</button></div>' +
-      '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">结束并清空房间</button></div>';
-  } else {
-    h += '<div class="msg" style="margin-top:10px">等待庄家开下一局…（赢家坐庄）</div>';
-  }
+  if (pidInList()) h += '<div class="row" style="margin-top:14px"><button class="btn-gold" style="font-size:17px;padding:11px 36px" onclick="doNext()">下一局（赢家坐庄）</button></div>' +
+    '<div class="msg">任意已加入玩家都可以开启下一局</div>';
+  if (S.is_host) h += '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">结束并清空房间</button></div>';
   h += '</div></div>';
   return h;
 }

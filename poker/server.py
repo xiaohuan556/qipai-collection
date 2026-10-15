@@ -547,9 +547,15 @@ class H(BaseHTTPRequestHandler):
                     pass
                 self._send({"ok": True, "unit": G.unit, "use_jokers": G.use_jokers})
             elif self.path == "/api/start":
-                if joined_ok and G.phase == "lobby" and len(G.order) >= MIN_PLAYERS:
+                if not joined_ok:
+                    self._send({"error": "请先进入会议"})
+                elif G.phase != "lobby":
+                    self._send({"error": "本轮议程已经开始"})
+                elif len(G.order) < MIN_PLAYERS:
+                    self._send({"error": f"至少需要 {MIN_PLAYERS} 人才能启动"})
+                else:
                     G.new_round()
-                self._send({"ok": True})
+                    self._send({"ok": True})
             elif self.path == "/api/assign":
                 self._send({"error": G.assign(data.get("pid"), data.get("groups", {}))})
             elif self.path == "/api/shuffle":
@@ -561,9 +567,13 @@ class H(BaseHTTPRequestHandler):
                 else:
                     self._send(G.auto_split(data["pid"]))
             elif self.path == "/api/next":
-                if joined_ok and G.phase == "reveal":
+                if not joined_ok:
+                    self._send({"error": "请先进入会议"})
+                elif G.phase != "reveal":
+                    self._send({"error": "当前还不能进入下一议题"})
+                else:
                     G.new_round()
-                self._send({"ok": True})
+                    self._send({"ok": True})
             elif self.path == "/api/settle":
                 if joined_ok and G.phase == "reveal":
                     G.settle()

@@ -313,10 +313,10 @@ class Game:
         with self.lock:
             if self.phase not in ('lobby', 'results'):
                 return '本局正在进行中'
-            if not self._is_host(pid):
-                return '只有庄家能开始游戏'
+            if not self.player_by(pid):
+                return '请先加入房间'
             if len(self.players) < 2:
-                return '至少需要 2 名玩家（可添加电脑）'
+                return '至少需要 2 名玩家'
             self.round_no += 1
             deck = build_deck()
             random.shuffle(deck)
