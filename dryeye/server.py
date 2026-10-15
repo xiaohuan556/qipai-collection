@@ -14,7 +14,7 @@ from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from itertools import product
 
-PORT = 8895
+PORT = int(os.environ.get('PORT', '8895'))
 MAX_PLAYERS = 10          # 单副牌建议 2~10 人
 SUITS = ['♠', '♥', '♣', '♦']
 RANK_TXT = {3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10',

@@ -14,7 +14,7 @@
 <nav class="nav" aria-label="功能模块">
   <button class="active" data-port="8899" data-path="red10/">红十战略开发<span>牌局模块</span></button>
   <button data-port="8787" data-path="poker/">赛马安卓讨论会议<span>牌面分配</span></button>
-  <button data-port="8895" data-path="dryeye/?preview=2">干瞪眼 iOS 商业落地<span>计分模块</span></button>
+  <button data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
 </nav>
 <section class="stage"><div class="frame"><iframe id="gameFrame" title="功能模块"></iframe></div></section>
 <div class="hint" id="runHint"></div>
@@ -22,11 +22,11 @@
 const frame=document.getElementById('gameFrame');
 const buttons=[...document.querySelectorAll('.nav button')];
 const isLocal=['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
-function moduleUrl(btn){return isLocal?`http://localhost:${btn.dataset.port}/`:btn.dataset.path}
+function moduleUrl(btn){return isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path)}
 function openModule(btn){buttons.forEach(x=>x.classList.remove('active'));btn.classList.add('active');frame.src=moduleUrl(btn)}
 buttons.forEach(btn=>btn.addEventListener('click',()=>openModule(btn)));
 document.getElementById('runStatus').innerHTML=isLocal?'本地完整运行<br>模块独立，数据互不干扰':'GitHub Pages 在线预览<br>源代码已同步';
-document.getElementById('runHint').textContent=isLocal?'启动方式：双击本文件夹里的“启动棋牌合集.bat”。如果某个模块显示连接中，请确认启动窗口仍在运行。':'当前是静态在线预览；界面可以打开，但开局、联机和结算需要下载项目后运行“启动棋牌合集.bat”。';
+document.getElementById('runHint').textContent=isLocal?'启动方式：双击本文件夹里的“启动棋牌合集.bat”。如果某个模块显示连接中，请确认启动窗口仍在运行。':'干瞪眼已接入外网真人联机；红十和赛马目前仍为界面预览。免费服务长时间无人访问后，首次打开可能需要等待约一分钟。';
 openModule(buttons[0]);
 </script>
 </body></html>
