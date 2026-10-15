@@ -61,6 +61,7 @@
   .rules summary { cursor: pointer; font-size: 14px; color: #333; font-weight: 600; }
   .transfers { text-align: left; max-width: 460px; margin: 8px auto; font-size: 15px; line-height: 2; }
   .mymoney { font-size: 17px; font-weight: 700; margin: 10px 0; }
+  .room-gate{max-width:720px}.room-create{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.room-list{display:grid;gap:8px;margin-top:14px}.room-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #d8e0e8;border-radius:10px;padding:10px 12px;background:#f7f9fb;text-align:left}.room-row .meta{font-size:12px;color:#718096;margin-top:3px}
 </style>
 </head>
 <body>
@@ -69,6 +70,18 @@
 <h1>赛马安卓讨论会议</h1>
 <div class="sub">牌局分配、组合推演与多人协作</div>
 <div class="sub" id="roomInfo"></div>
+
+<div class="panel room-gate" id="roomGate">
+  <h2 style="margin-top:0">选择赛马房间</h2>
+  <div class="hint">每个人都可以自由创建房间；创建者就是该房间房主。</div>
+  <div class="room-create" style="margin-top:12px">
+    <input id="creatorInput" placeholder="你的名字" maxlength="10">
+    <input id="roomNameInput" placeholder="房间名（可不填）" maxlength="20">
+    <button onclick="createRoom()">创建房间</button>
+  </div>
+  <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
+</div>
+<div style="margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- 会议入口 -->
 <div class="panel" id="lobby">
@@ -87,7 +100,7 @@
     <div class="hint">设置将在下一轮议程生效 · 三类议题分别占用 1 / 2 / 3 张方案卡</div>
   </div>
   <button id="startBtn" style="display:none" onclick="api('/api/start',{pid:pid})">启动战略议程</button>
-  <button id="clearBtn" class="warn" style="display:none" onclick="if(confirm('确定清空参会名单吗？(所有人需重新进入)'))api('/api/clearplayers',{pid:pid})">清空参会名单</button>
+  <button id="clearBtn" class="warn" style="display:none" onclick="if(confirm('确定移除其他成员并清空本房间记录吗？'))api('/api/clearplayers',{pid:pid})">清空其他成员</button>
   <details class="rules" style="max-width:680px;margin:10px auto 0">
     <summary>会议议程说明</summary>
     <div style="margin-top:8px">
@@ -155,6 +168,7 @@
         onclick="endMatch()">⚠️ 结束当前牌局</button>
 
 <script>
+let room = localStorage.getItem("poker_room") || "";
 let pid = localStorage.getItem("poker_pid") || "";
 let S = null;
 let groups = { bi: [], shi: [], zha: [] };
@@ -250,8 +264,38 @@ async function api(path, body) {
     }
     return { ok: true };
   }
-  const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  body = Object.assign({}, body || {});
+  if (path !== "/api/create") body.room = room;
+  const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   return r.json();
+}
+
+function escRoom(s){ return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+async function pollRooms(){
+  try{
+    const j = await (await fetch('/api/rooms',{cache:'no-store'})).json();
+    const rooms = j.rooms || [];
+    document.getElementById('roomList').innerHTML = rooms.length ? rooms.map(r=>
+      '<div class="room-row"><div><b>'+escRoom(r.name)+'</b><div class="meta">房主：'+escRoom(r.creator)+' · '+r.players+'/'+r.max_players+' 人 · '+(r.phase==='lobby'?'等待中':'进行中')+'</div></div>'+
+      '<button '+(r.players>=r.max_players?'disabled':'')+' onclick="openRoom(\''+r.id+'\')">进入</button></div>'
+    ).join('') : '<div class="hint">还没有房间，你可以创建第一个。</div>';
+  }catch(e){ document.getElementById('roomList').innerHTML='<div class="hint">房间列表暂时连接不上</div>'; }
+}
+async function createRoom(){
+  const name=document.getElementById('creatorInput').value.trim();
+  const roomName=document.getElementById('roomNameInput').value.trim();
+  if(!name) return alert('先输入你的名字');
+  const r=await api('/api/create',{name:name,room_name:roomName,bid:bidGet()});
+  if(r.error) return alert(r.error);
+  room=r.room; pid=r.pid; localStorage.setItem('poker_room',room); localStorage.setItem('poker_pid',pid); S=null; await poll();
+}
+function openRoom(id){ room=id; pid=''; S=null; localStorage.setItem('poker_room',room); localStorage.removeItem('poker_pid'); poll(); }
+function leaveRoom(){ room=''; pid=''; S=null; groups={bi:[],shi:[],zha:[]}; localStorage.removeItem('poker_room'); localStorage.removeItem('poker_pid'); renderRoomGate(); pollRooms(); }
+function renderRoomGate(){
+  const choosing=!room;
+  document.getElementById('roomGate').style.display=choosing?'block':'none';
+  document.getElementById('roomSwitchBtn').style.display=choosing?'none':'inline-block';
+  if(choosing){ ['lobby','assign','reveal','settled','waiting'].forEach(id=>document.getElementById(id).style.display='none'); document.getElementById('abortBtn').style.display='none'; }
 }
 
 function bidGet() {
@@ -433,7 +477,8 @@ document.querySelectorAll(".slot").forEach(slot => {
 
 /* ---------- 渲染 ---------- */
 function render() {
-  if (!S) return;
+  renderRoomGate();
+  if (!room || !S) return;
   let ph = S.phase;
   if (ph !== "lobby" && !S.you) ph = "lobby";
   document.getElementById("abortBtn").style.display = S.you && ["assign", "reveal", "settled"].includes(ph) ? "inline-block" : "none";
@@ -442,14 +487,7 @@ function render() {
   document.getElementById("reveal").style.display = ph === "reveal" ? "" : "none";
   document.getElementById("settled").style.display = ph === "settled" ? "" : "none";
   document.getElementById("waiting").style.display = "none";
-  const localHost = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(location.hostname);
-  document.getElementById("roomInfo").textContent = ph === "lobby"
-    ? (demoMode
-        ? `浏览器演示模式 · 单卡权重 ${S.unit}`
-        : localHost
-        ? `局域网参会入口： http://${S.lan_ip}:${location.port || 8787} · 单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`
-        : `会议链接：${location.origin} · 单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`)
-    : `单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`;
+  document.getElementById("roomInfo").textContent = `${S.room_name || '赛马房间'} · 房主 ${S.room_creator || ''} · 单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`;
   document.getElementById("unitShow1").textContent = S.unit;
   document.getElementById("unitShow2").textContent = S.unit;
 
@@ -588,11 +626,13 @@ function renderAssign() {
 }
 
 async function poll() {
+  if(!room){ renderRoomGate(); await pollRooms(); return; }
   const myPid = pid;                   // 记住本次请求用的身份
   try {
-    const r = await fetch("/api/state?pid=" + myPid);
+    const r = await fetch("/api/state?room=" + encodeURIComponent(room) + "&pid=" + encodeURIComponent(myPid));
     const st = await r.json();
     if (myPid !== pid) return;         // 期间身份已变化(刚点了加入), 丢弃过期响应
+    if(st.room_missing){ leaveRoom(); return; }
     if (st.you === null && pid) { pid = ""; localStorage.removeItem("poker_pid"); }
     S = st;
     render();

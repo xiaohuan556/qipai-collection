@@ -13,6 +13,7 @@ import uuid
 from collections import Counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from itertools import product
+from urllib.parse import parse_qs, urlparse
 
 PORT = int(os.environ.get('PORT', '8895'))
 MAX_PLAYERS = 10          # 单副牌建议 2~10 人
@@ -262,7 +263,7 @@ class Game:
                     if p['bid'] == bid:
                         p['last_seen'] = time.time()
                         return p['pid'], None
-                return None, '本局已结束，请等庄家开下一局'
+                return None, '本局已结束，请等房内玩家开启下一局'
             pid = uuid.uuid4().hex[:8]
             p = {'pid': pid, 'name': name or f'玩家{len(self.players)+1}', 'bid': bid,
                  'is_bot': is_bot, 'hand': [], 'score': 0,
@@ -589,7 +590,43 @@ class Game:
                     'is_host': self._is_host(pid) if pid else False}
 
 
-GAME = Game()
+ROOMS = {}
+ROOMS_LOCK = threading.RLock()
+
+
+def create_room(room_name, creator, bid):
+    creator = (creator or '').strip()[:12]
+    if not creator:
+        return {'err': '请先输入你的名字'}
+    room_name = (room_name or '').strip()[:20] or (creator + '的房间')
+    game = Game()
+    pid, err = game.join(creator, bid)
+    if err:
+        return {'err': err}
+    room_id = uuid.uuid4().hex[:8]
+    with ROOMS_LOCK:
+        while room_id in ROOMS:
+            room_id = uuid.uuid4().hex[:8]
+        ROOMS[room_id] = {'name': room_name, 'creator': creator, 'game': game}
+    return {'room': room_id, 'pid': pid, 'err': None}
+
+
+def get_room(room_id):
+    with ROOMS_LOCK:
+        return ROOMS.get(room_id or '')
+
+
+def room_list():
+    with ROOMS_LOCK:
+        items = list(ROOMS.items())
+    result = []
+    for room_id, info in reversed(items):
+        game = info['game']
+        with game.lock:
+            result.append({'id': room_id, 'name': info['name'],
+                           'creator': info['creator'], 'players': len(game.players),
+                           'max_players': MAX_PLAYERS, 'phase': game.phase})
+    return result
 
 # ---------------------------------------------------------------- HTTP
 
@@ -610,11 +647,24 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path.startswith('/api/state'):
-            qs = dict(p.split('=', 1) for p in self.path.split('?', 1)[1].split('&') if '=' in p) if '?' in self.path else {}
-            self._json(GAME.state(qs.get('pid', '')))
+        u = urlparse(self.path)
+        if u.path == '/api/rooms':
+            self._json({'rooms': room_list()})
             return
-        if self.path in ('/', '/index.html'):
+        if u.path == '/api/state':
+            qs = parse_qs(u.query)
+            room_id = (qs.get('room') or [''])[0]
+            pid = (qs.get('pid') or [''])[0]
+            info = get_room(room_id)
+            if not info:
+                self._json({'err': '房间不存在', 'room_missing': True})
+                return
+            state = info['game'].state(pid)
+            state.update({'room': room_id, 'room_name': info['name'],
+                          'room_creator': info['creator']})
+            self._json(state)
+            return
+        if u.path in ('/', '/index.html'):
             fp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
             with open(fp, 'rb') as f:
                 body = f.read()
@@ -634,32 +684,40 @@ class Handler(BaseHTTPRequestHandler):
             self._json({'err': 'bad request'}, 400)
             return
         path = self.path.split('?')[0]
+        if path == '/api/create':
+            self._json(create_room(data.get('room_name'), data.get('name'), data.get('bid', '')))
+            return
+        info = get_room(data.get('room'))
+        if not info:
+            self._json({'err': '房间不存在，请返回房间列表'})
+            return
+        game = info['game']
         pid = data.get('pid', '')
         err = None
         if path == '/api/join':
-            pid, err = GAME.join(str(data.get('name', '')).strip()[:12], data.get('bid', ''))
+            pid, err = game.join(str(data.get('name', '')).strip()[:12], data.get('bid', ''))
             self._json({'pid': pid, 'err': err})
             return
         elif path == '/api/start':
-            err = GAME.start_round(pid)
+            err = game.start_round(pid)
         elif path == '/api/play':
-            err = GAME.act_play(pid, data.get('cards', []))
+            err = game.act_play(pid, data.get('cards', []))
         elif path == '/api/pass':
-            err = GAME.act_pass(pid)
+            err = game.act_pass(pid)
         elif path == '/api/skip':
-            err = GAME.act_skip(pid)
+            err = game.act_skip(pid)
         elif path == '/api/next':
-            err = GAME.next_round(pid)
+            err = game.next_round(pid)
         elif path == '/api/addbot':
-            err = GAME.add_bot(pid)
+            err = game.add_bot(pid)
         elif path == '/api/delbot':
-            err = GAME.remove_bot(pid)
+            err = game.remove_bot(pid)
         elif path == '/api/base':
-            err = GAME.set_base(pid, data.get('value', 1))
+            err = game.set_base(pid, data.get('value', 1))
         elif path == '/api/abort':
-            err = GAME.abort(pid)
+            err = game.abort(pid)
         elif path == '/api/clear':
-            err = GAME.clear(pid)
+            err = game.clear(pid)
         else:
             self._json({'err': 'not found'}, 404)
             return

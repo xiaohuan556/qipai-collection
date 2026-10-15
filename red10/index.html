@@ -90,12 +90,26 @@
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
          padding:9px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
   #toast.show{opacity:.93}
+  .room-gate{max-width:720px;margin:18px auto}.room-create{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.room-create input{min-width:150px}
+  .room-list{display:grid;gap:8px;margin-top:14px}.room-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafafb}.room-row .meta{font-size:12px;color:var(--sub)}
 </style>
 </head>
 <body>
 
 <h1>🃏 红十战略开发</h1>
 <div class="sub" id="roomInfo">四人一桌 · 一副牌去掉大小王和 3、4、5（40 张）· 每人 10 张</div>
+
+<div class="panel room-gate" id="roomGate">
+  <h2 style="margin-top:0">选择红十房间</h2>
+  <div class="hint">每个人都可以自由创建房间；创建者就是该房间房主。</div>
+  <div class="room-create" style="margin-top:12px">
+    <input id="creatorInput" placeholder="你的名字" maxlength="10">
+    <input id="roomNameInput" placeholder="房间名（可不填）" maxlength="20">
+    <button onclick="createRoom()">创建房间</button>
+  </div>
+  <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
+</div>
+<div style="text-align:center;margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- ============ 大厅 ============ -->
 <div class="panel" id="lobby">
@@ -113,7 +127,7 @@
   </div>
   <button id="startBtn" style="display:none" onclick="api('/api/start',{pid:pid}).then(poll)">开始游戏</button>
   <button id="clearBtn" class="warn" style="display:none"
-          onclick="if(confirm('确定清空所有玩家吗？(所有人需重新加入)'))api('/api/clear',{pid:pid}).then(poll)">清空所有人</button>
+          onclick="if(confirm('确定移除其他成员并清空本房间账目吗？'))api('/api/clear',{pid:pid}).then(poll)">清空其他成员</button>
   <div class="hint" id="lobbyHint" style="margin-top:8px"></div>
 </div>
 
@@ -223,6 +237,7 @@
         onclick="if(confirm('确定立即结束当前牌局并回到大厅吗？（本局不计输赢）'))api('/api/abort',{pid:pid}).then(poll)">⚠️ 结束当前牌局</button>
 
 <script>
+let room = localStorage.getItem("hs_room") || "";
 let pid = localStorage.getItem("hs_pid") || "";
 let S = null;
 let sel = new Set();
@@ -244,11 +259,42 @@ function toast(t){
 }
 async function api(path, body){
   try{
-    const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+    body = Object.assign({}, body || {});
+    if(path !== "/api/create") body.room = room;
+    const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
     const j = await r.json();
     if(j.error) toast(j.error);
     return j;
   }catch(e){ toast("网络出错"); return {error:"net"}; }
+}
+function escRoom(s){ return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+async function pollRooms(){
+  try{
+    const j = await (await fetch('/api/rooms',{cache:'no-store'})).json();
+    const rooms = j.rooms || [];
+    document.getElementById('roomList').innerHTML = rooms.length ? rooms.map(r=>
+      '<div class="room-row"><div><b>'+escRoom(r.name)+'</b><div class="meta">房主：'+escRoom(r.creator)+' · '+r.players+'/'+r.max_players+' 人 · '+(r.phase==='join'?'等待中':'游戏中')+'</div></div>'+
+      '<button '+(r.players>=r.max_players?'disabled':'')+' onclick="openRoom(\''+r.id+'\')">进入</button></div>'
+    ).join('') : '<div class="hint">还没有房间，你可以创建第一个。</div>';
+  }catch(e){ document.getElementById('roomList').innerHTML='<div class="hint">房间列表暂时连接不上</div>'; }
+}
+async function createRoom(){
+  const name = document.getElementById('creatorInput').value.trim();
+  const roomName = document.getElementById('roomNameInput').value.trim();
+  if(!name) return toast('先输入你的名字');
+  const bid = localStorage.getItem('hs_bid') || (Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+  localStorage.setItem('hs_bid',bid);
+  const r = await api('/api/create',{name:name,room_name:roomName,bid:bid});
+  if(r.error) return;
+  room=r.room; pid=r.pid; localStorage.setItem('hs_room',room); localStorage.setItem('hs_pid',pid); S=null; poll();
+}
+function openRoom(id){ room=id; pid=''; S=null; localStorage.setItem('hs_room',room); localStorage.removeItem('hs_pid'); poll(); }
+function leaveRoom(){ room=''; pid=''; S=null; sel.clear(); localStorage.removeItem('hs_room'); localStorage.removeItem('hs_pid'); renderRoomGate(); pollRooms(); }
+function renderRoomGate(){
+  const choosing=!room;
+  document.getElementById('roomGate').style.display=choosing?'block':'none';
+  document.getElementById('roomSwitchBtn').style.display=choosing?'none':'inline-block';
+  if(choosing){ ['lobby','declare','play','result','waiting'].forEach(id=>document.getElementById(id).style.display='none'); document.getElementById('abortBtn').style.display='none'; }
 }
 async function join(){
   const nm = document.getElementById("nameInput").value.trim();
@@ -393,7 +439,8 @@ function beats(a,b){
 
 /* ---------------- 渲染 ---------------- */
 function render(){
-  if(!S) return;
+  renderRoomGate();
+  if(!room || !S) return;
   const ph = S.phase;
   const joined = !!S.you;
   const show = (id) => document.getElementById(id).style.display = "block";
@@ -401,7 +448,7 @@ function render(){
   ["lobby","declare","play","result","waiting"].forEach(hide);
 
   document.getElementById("roomInfo").textContent =
-    "四人一桌 · 一副牌去掉大小王和 3、4、5（40 张）· 每人 10 张" +
+    (S.room_name || '红十房间') + " · 房主 " + (S.room_creator || '') + " · 四人一桌" +
     (S.round_no ? "　·　已打到第 " + S.round_no + " 局" : "");
 
   if(ph === "join" || !joined){
@@ -547,11 +594,13 @@ function renderResult(){
 
 /* ---------------- 轮询 ---------------- */
 async function poll(){
+  if(!room){ renderRoomGate(); await pollRooms(); return; }
   const myPid = pid;
   try{
-    const r = await fetch("/api/state?pid=" + encodeURIComponent(myPid), {cache:"no-store"});
+    const r = await fetch("/api/state?room=" + encodeURIComponent(room) + "&pid=" + encodeURIComponent(myPid), {cache:"no-store"});
     const st = await r.json();
     if(myPid !== pid) return;                       // 丢弃过期响应
+    if(st.room_missing){ leaveRoom(); return; }
     if(st.you === null && pid){ pid = ""; localStorage.removeItem("hs_pid"); }
     if(st.round_no !== lastRound){ lastRound = st.round_no; sel.clear(); handOrderKey = ""; reorderPick = null; reorderMode = false; }
     S = st; render();

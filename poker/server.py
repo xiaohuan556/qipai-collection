@@ -14,6 +14,7 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from itertools import combinations
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).parent
 PORT = int(os.environ.get("PORT", 8787))   # 云端部署时会注入 PORT 环境变量
@@ -214,10 +215,13 @@ class Game:
         return None
 
     def clear_players(self):
-        self.players.clear()
-        self.order.clear()
-        self.bids.clear()
-        self.ledger.clear()
+        host_pid = self.order[0]
+        host = self.players[host_pid]
+        host.update({"cards": [], "assign": None, "locked": False})
+        self.players = {host_pid: host}
+        self.order = [host_pid]
+        self.bids = {b: p for b, p in self.bids.items() if p == host_pid}
+        self.ledger = {host_pid: 0.0}
         self.scores.clear()
         self.results = None
         self.settle_list = None
@@ -464,7 +468,43 @@ class Game:
         }
 
 
-G = Game()
+ROOMS = {}
+ROOMS_LOCK = threading.RLock()
+
+
+def create_room(room_name, creator, bid):
+    creator = (creator or "").strip()[:10]
+    if not creator:
+        return {"error": "请先输入你的名字"}
+    room_name = (room_name or "").strip()[:20] or (creator + "的房间")
+    game = Game()
+    pid, err = game.join(creator, bid)
+    if err:
+        return {"error": err}
+    room_id = uuid.uuid4().hex[:8]
+    with ROOMS_LOCK:
+        while room_id in ROOMS:
+            room_id = uuid.uuid4().hex[:8]
+        ROOMS[room_id] = {"name": room_name, "creator": creator, "game": game}
+    return {"ok": True, "room": room_id, "pid": pid}
+
+
+def get_room(room_id):
+    with ROOMS_LOCK:
+        return ROOMS.get(room_id or "")
+
+
+def room_list():
+    with ROOMS_LOCK:
+        items = list(ROOMS.items())
+    result = []
+    for room_id, info in reversed(items):
+        game = info["game"]
+        with game.lock:
+            result.append({"id": room_id, "name": info["name"],
+                           "creator": info["creator"], "players": len(game.order),
+                           "max_players": MAX_PLAYERS, "phase": game.phase})
+    return result
 
 
 def lan_ip():
@@ -494,17 +534,30 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/" or self.path.startswith("/index"):
+        u = urlparse(self.path)
+        if u.path in ("/", "/index.html"):
             body = (ROOT / "index.html").read_bytes()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
-        elif self.path.startswith("/api/state"):
-            pid = self.path.split("pid=")[1].split("&")[0] if "pid=" in self.path else ""
-            with G.lock:
-                self._send(G.state(pid))
+        elif u.path == "/api/rooms":
+            self._send({"rooms": room_list()})
+        elif u.path == "/api/state":
+            q = parse_qs(u.query)
+            pid = (q.get("pid") or [""])[0]
+            room_id = (q.get("room") or [""])[0]
+            info = get_room(room_id)
+            if not info:
+                self._send({"error": "房间不存在", "room_missing": True})
+                return
+            game = info["game"]
+            with game.lock:
+                state = game.state(pid)
+            state.update({"room": room_id, "room_name": info["name"],
+                          "room_creator": info["creator"]})
+            self._send(state)
         else:
             self.send_response(404)
             self.end_headers()
@@ -515,22 +568,30 @@ class H(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(n) or b"{}")
         except Exception:
             data = {}
-        with G.lock:
-            host_ok = bool(G.order) and data.get("pid") == G.order[0]
-            joined_ok = data.get("pid") in G.players   # 任何已加入的玩家都能开局/翻局/结算
+        if self.path == "/api/create":
+            self._send(create_room(data.get("room_name"), data.get("name"), data.get("bid")))
+            return
+        info = get_room(data.get("room"))
+        if not info:
+            self._send({"error": "房间不存在，请返回房间列表"})
+            return
+        game = info["game"]
+        with game.lock:
+            host_ok = bool(game.order) and data.get("pid") == game.order[0]
+            joined_ok = data.get("pid") in game.players   # 任何已加入的玩家都能开局/翻局/结算
             if self.path == "/api/join":
-                pid, err = G.join(str(data.get("name", "")).strip()[:10], data.get("bid"))
+                pid, err = game.join(str(data.get("name", "")).strip()[:10], data.get("bid"))
                 self._send({"pid": pid, "error": err})
             elif self.path == "/api/kick":
-                if not host_ok or G.phase not in ("lobby", "settled"):
+                if not host_ok or game.phase not in ("lobby", "settled"):
                     self._send({"error": "只有主机能在等待/结算阶段移除玩家"})
                 else:
-                    self._send({"error": G.kick(data.get("target"))})
+                    self._send({"error": game.kick(data.get("target"))})
             elif self.path == "/api/clearplayers":
                 if not host_ok:
                     self._send({"error": "只有主机能清空玩家"})
                 else:
-                    G.clear_players()
+                    game.clear_players()
                     self._send({"ok": True})
             elif self.path == "/api/config":
                 if not host_ok:
@@ -540,50 +601,50 @@ class H(BaseHTTPRequestHandler):
                     if "unit" in data:
                         u = float(data["unit"])
                         if 0 < u <= 10000:
-                            G.unit = round(u, 2)
+                            game.unit = round(u, 2)
                     if "use_jokers" in data:
-                        G.use_jokers = bool(data["use_jokers"])
+                        game.use_jokers = bool(data["use_jokers"])
                 except Exception:
                     pass
-                self._send({"ok": True, "unit": G.unit, "use_jokers": G.use_jokers})
+                self._send({"ok": True, "unit": game.unit, "use_jokers": game.use_jokers})
             elif self.path == "/api/start":
                 if not joined_ok:
                     self._send({"error": "请先进入会议"})
-                elif G.phase != "lobby":
+                elif game.phase != "lobby":
                     self._send({"error": "本轮议程已经开始"})
-                elif len(G.order) < MIN_PLAYERS:
+                elif len(game.order) < MIN_PLAYERS:
                     self._send({"error": f"至少需要 {MIN_PLAYERS} 人才能启动"})
                 else:
-                    G.new_round()
+                    game.new_round()
                     self._send({"ok": True})
             elif self.path == "/api/assign":
-                self._send({"error": G.assign(data.get("pid"), data.get("groups", {}))})
+                self._send({"error": game.assign(data.get("pid"), data.get("groups", {}))})
             elif self.path == "/api/shuffle":
-                self._send({"error": G.shuffle_redeal(data.get("pid"))})
+                self._send({"error": game.shuffle_redeal(data.get("pid"))})
             elif self.path == "/api/autosplit":
-                p = G.players.get(data.get("pid"))
-                if not p or G.phase != "assign" or p["locked"]:
+                p = game.players.get(data.get("pid"))
+                if not p or game.phase != "assign" or p["locked"]:
                     self._send({"error": "当前不能自动摆牌"})
                 else:
-                    self._send(G.auto_split(data["pid"]))
+                    self._send(game.auto_split(data["pid"]))
             elif self.path == "/api/next":
                 if not joined_ok:
                     self._send({"error": "请先进入会议"})
-                elif G.phase != "reveal":
+                elif game.phase != "reveal":
                     self._send({"error": "当前还不能进入下一议题"})
                 else:
-                    G.new_round()
+                    game.new_round()
                     self._send({"ok": True})
             elif self.path == "/api/settle":
-                if joined_ok and G.phase == "reveal":
-                    G.settle()
+                if joined_ok and game.phase == "reveal":
+                    game.settle()
                 self._send({"ok": True})
             elif self.path == "/api/newmatch":
                 if joined_ok:
-                    G.new_match()
+                    game.new_match()
                 self._send({"ok": True})
             elif self.path == "/api/abort":
-                self._send({"error": G.abort_match(data.get("pid"))})
+                self._send({"error": game.abort_match(data.get("pid"))})
             else:
                 self.send_response(404)
                 self.end_headers()

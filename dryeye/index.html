@@ -108,10 +108,11 @@ details summary { color:#34475b; }
 <body>
 <div id="app"></div>
 <script>
+var room = localStorage.gy_room || '';
 var pid = localStorage.gy_pid || null;
 var bid = localStorage.gy_bid || (localStorage.gy_bid = Math.random().toString(36).slice(2, 12));
 var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null, offlinePreview = false;
-var lastViewKey = '', homeMode = false;
+var rooms = [], lastViewKey = '', homeMode = false;
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function toast(msg, isErr){
@@ -121,7 +122,9 @@ function toast(msg, isErr){
   setTimeout(function(){ t.remove(); }, 1800);
 }
 function api(path, body, cb){
-  fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) })
+  body = Object.assign({}, body || {});
+  if (path !== '/api/create') body.room = room;
+  fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
     .then(function(r){ return r.json(); })
     .then(function(j){ cb && cb(j); })
     .catch(function(){});
@@ -153,6 +156,7 @@ function toggleCard(c){
 
 function render(){
   var app = document.getElementById('app');
+  if (!room){ app.innerHTML = roomsView(); return; }
   var oldNameInput = document.getElementById('nm');
   var draftName = oldNameInput ? oldNameInput.value : '';
   var nameWasFocused = !!(oldNameInput && document.activeElement === oldNameInput);
@@ -175,6 +179,35 @@ function render(){
   }
 }
 
+function roomsView(){
+  var list = rooms.length ? rooms.map(function(r){
+    var status = r.phase === 'lobby' ? '等待中' : '游戏中';
+    return '<div class="panel" style="max-width:620px;margin:8px auto;display:flex;align-items:center;justify-content:space-between;gap:10px">' +
+      '<div><b>' + esc(r.name) + '</b><div class="msg" style="text-align:left">房主：' + esc(r.creator) + ' · ' + r.players + '/' + r.max_players + ' 人 · ' + status + '</div></div>' +
+      '<button class="btn-gold" ' + (r.players >= r.max_players ? 'disabled' : '') + ' onclick="openRoom(\'' + r.id + '\')">进入</button></div>';
+  }).join('') : '<div class="msg" style="margin:24px">还没有房间，你可以创建第一个。</div>';
+  return '<div class="topbar"><h1>👁️ 干瞪眼</h1><span class="badge">房间大厅</span><div class="spacer"></div></div>' +
+    '<div class="panel" style="max-width:620px;margin:10vh auto 16px"><h2>创建房间</h2>' +
+    '<div class="msg">每个人都可以自由创建房间；创建者就是该房间房主。</div>' +
+    '<div class="row"><input type="text" id="creator" placeholder="你的名字" maxlength="12"><input type="text" id="roomName" placeholder="房间名（可不填）" maxlength="20"></div>' +
+    '<div class="row"><button class="btn-gold" onclick="doCreateRoom()">创建房间</button></div></div>' + list;
+}
+
+function pollRooms(){
+  fetch('/api/rooms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ rooms=j.rooms||[]; lastViewKey=''; render(); }).catch(function(){});
+}
+function doCreateRoom(){
+  var name=document.getElementById('creator').value.trim();
+  var roomName=document.getElementById('roomName').value.trim();
+  if(!name){ toast('先输入你的名字',true); return; }
+  api('/api/create',{name:name,room_name:roomName,bid:bid},function(j){
+    if(j.err){toast(j.err,true);return;}
+    room=j.room; pid=j.pid; localStorage.gy_room=room; localStorage.gy_pid=pid; S=null; lastViewKey=''; poll();
+  });
+}
+function openRoom(id){ room=id; pid=null; S=null; localStorage.gy_room=room; localStorage.removeItem('gy_pid'); lastViewKey=''; poll(); }
+function leaveRoom(){ room=''; pid=null; S=null; sel={}; selN=0; homeMode=false; localStorage.removeItem('gy_room'); localStorage.removeItem('gy_pid'); lastViewKey=''; pollRooms(); }
+
 function homeView(){
   var canJoin = S.phase === 'lobby';
   var note = canJoin ? '可以重新加入当前测试桌。' : '当前牌局还在进行中，结束后即可重新加入。';
@@ -187,9 +220,8 @@ function homeView(){
 }
 
 function lobbyView(){
-  var lobbyActions = pidInList() ? '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="doRestart()">重新开始</button>' +
-    '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doExitHome()">退出主页面</button>' : '';
-  var h = '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1><span class="badge">测试桌 · 底分 ¥' + S.base + '</span><div class="spacer"></div>' + lobbyActions + '</div>';
+  var lobbyActions = '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="leaveRoom()">← 返回房间列表</button>';
+  var h = '<div class="topbar"><h1>👁️ 干瞪眼</h1><span class="badge">' + esc(S.room_name||'房间') + ' · 房主 ' + esc(S.room_creator||'') + ' · 底分 ¥' + S.base + '</span><div class="spacer"></div>' + lobbyActions + '</div>';
   if (offlinePreview){
     h += '<div class="panel" style="max-width:520px;margin:12vh auto 0;text-align:center">' +
       '<h2>在线界面预览</h2>' +
@@ -236,14 +268,13 @@ function lobbyView(){
 }
 
 function gameView(){
-  var h = '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1>' +
+  var h = '<div class="topbar"><h1>👁️ 干瞪眼</h1><span class="badge">' + esc(S.room_name||'房间') + '</span>' +
     '<span class="badge">第 ' + S.round + ' 局</span>' +
     '<span class="badge">底分 ¥' + S.base + '</span>' +
     '<span class="badge">牌堆 ' + S.deck + ' 张</span>' +
     (S.bombs ? '<span class="badge">炸弹×' + S.bombs + '（已翻倍）</span>' : '') +
     '<div class="spacer"></div>' +
-    '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="doRestart()">重新开始</button>' +
-    '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doExitHome()">退出主页面</button>' +
+    '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="leaveRoom()">← 返回房间列表</button>' +
     (S.you ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">结束当前牌局</button>' :
       (S.phase !== 'lobby' ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">恢复牌桌</button>' : '')) +
     '</div>';
@@ -360,18 +391,13 @@ function doAddBot(){ api('/api/addbot', { pid: pid }, playErr); }
 function doDelBot(){ api('/api/delbot', { pid: pid }, playErr); }
 function doAbort(){ if (confirm('确定立即结束当前牌局并回到大厅吗？本局不计输赢')) api('/api/abort', { pid: pid || '' }, function(j){ if (j && j.err) toast(j.err, true); else { homeMode = false; lastViewKey = ''; poll(); } }); }
 function doRestart(){
-  if (confirm('重新开始会退出当前牌局并回到主页面，其他玩家的牌局不会被结束。')) doExitHome();
+  if (confirm('返回房间列表？当前房间不会被结束。')) leaveRoom();
 }
 function doExitHome(){
-  sel = {}; selN = 0;
-  pid = null;
-  localStorage.removeItem('gy_pid');
-  homeMode = true;
-  lastViewKey = '';
-  render();
+  leaveRoom();
 }
 function doResume(){ homeMode = false; lastViewKey = ''; render(); }
-function doClear(){ if (confirm('清空房间（含积分）？')) { pid = null; localStorage.removeItem('gy_pid'); api('/api/clear', { pid: S && pidInList() ? pidOfHost() : (S&&S.players&&S.players[0]?S.players[0].pid:'') }, function(){ poll(); }); } }
+function doClear(){ if (confirm('移除其他成员并清空本房间积分？')) api('/api/clear', { pid: pid }, function(j){ if(j&&j.err) toast(j.err,true); else poll(); }); }
 function doBase(){
   var v = parseInt(document.getElementById('bs').value, 10);
   if (!v || v < 1){ toast('底分至少 1', true); return; }
@@ -392,9 +418,11 @@ function doSkip(){ api('/api/skip', { pid: pid }, function(j){ if (j.err) toast(
 
 // ---------- 轮询 ----------
 function poll(){
-  fetch('/api/state?pid=' + encodeURIComponent(pid || ''))
+  if(!room){ pollRooms(); return; }
+  fetch('/api/state?room=' + encodeURIComponent(room) + '&pid=' + encodeURIComponent(pid || ''))
     .then(function(r){ return r.json(); })
     .then(function(j){
+      if(j.room_missing){ leaveRoom(); return; }
       var first = !S;
       S = j;
       if (j.deal_id !== lastDeal){ sel = {}; selN = 0; lastDeal = j.deal_id; }

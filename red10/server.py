@@ -16,6 +16,7 @@ import random
 import socket
 import threading
 import time
+import uuid
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
@@ -192,11 +193,16 @@ class Game:
         return {"pid": pid, "name": name}
 
     def clear_players(self, pid):
+        if not self.order or self.order[0] != pid:
+            return {"error": "只有房主可以清空成员"}
         if self.phase == "play":
             return {"error": "牌局进行中，不能清空"}
-        self.p = {}
-        self.order = []
-        self.ledger = {}
+        host = self.p[pid]
+        host.update({"hand": [], "out": False, "out_order": 0,
+                     "choice": None, "surrender": False})
+        self.p = {pid: host}
+        self.order = [pid]
+        self.ledger = {pid: 0.0}
         self.round_no = 0
         self.phase = "join"
         self.result = None
@@ -617,48 +623,85 @@ class Game:
         return st
 
 
-G = Game()
+ROOMS = {}
+ROOMS_LOCK = threading.RLock()
+
+
+def create_room(room_name, creator, bid):
+    creator = (creator or "").strip()[:10]
+    if not creator:
+        return {"error": "请先输入你的名字"}
+    room_name = (room_name or "").strip()[:20] or (creator + "的房间")
+    game = Game()
+    joined = game.join(creator, bid)
+    room_id = uuid.uuid4().hex[:8]
+    with ROOMS_LOCK:
+        while room_id in ROOMS:
+            room_id = uuid.uuid4().hex[:8]
+        ROOMS[room_id] = {"name": room_name, "creator": creator,
+                          "created": time.time(), "game": game}
+    return {"ok": True, "room": room_id, "pid": joined["pid"]}
+
+
+def room_list():
+    with ROOMS_LOCK:
+        items = list(ROOMS.items())
+    result = []
+    for room_id, info in items:
+        game = info["game"]
+        with game.lock:
+            result.append({"id": room_id, "name": info["name"],
+                           "creator": info["creator"], "players": len(game.order),
+                           "max_players": 4, "phase": game.phase})
+    result.sort(key=lambda x: ROOMS[x["id"]]["created"], reverse=True)
+    return result
+
+
+def get_room(room_id):
+    with ROOMS_LOCK:
+        info = ROOMS.get(room_id or "")
+    return info
 
 
 # ------------------------------------------------------------------ HTTP
-def h_join(d):
-    return G.join(d.get("name"), d.get("bid"))
+def h_join(g, d):
+    return g.join(d.get("name"), d.get("bid"))
 
 
-def h_clear(d):
-    return G.clear_players(d.get("pid"))
+def h_clear(g, d):
+    return g.clear_players(d.get("pid"))
 
 
-def h_base(d):
-    return G.set_base(d.get("pid"), d.get("base"))
+def h_base(g, d):
+    return g.set_base(d.get("pid"), d.get("base"))
 
 
-def h_start(d):
-    return G.start(d.get("pid"))
+def h_start(g, d):
+    return g.start(d.get("pid"))
 
 
-def h_declare(d):
-    return G.declare(d.get("pid"), d.get("action"))
+def h_declare(g, d):
+    return g.declare(d.get("pid"), d.get("action"))
 
 
-def h_play(d):
-    return G.play(d.get("pid"), d.get("cards"))
+def h_play(g, d):
+    return g.play(d.get("pid"), d.get("cards"))
 
 
-def h_pass(d):
-    return G.do_pass(d.get("pid"))
+def h_pass(g, d):
+    return g.do_pass(d.get("pid"))
 
 
-def h_next(d):
-    return G.next_round(d.get("pid"))
+def h_next(g, d):
+    return g.next_round(d.get("pid"))
 
 
-def h_resetmoney(d):
-    return G.reset_money(d.get("pid"))
+def h_resetmoney(g, d):
+    return g.reset_money(d.get("pid"))
 
 
-def h_abort(d):
-    return G.abort(d.get("pid"))
+def h_abort(g, d):
+    return g.abort(d.get("pid"))
 
 
 ROUTES = {
@@ -709,11 +752,22 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 self._send(500, "index.html 读取失败: %s" % e, "text/plain; charset=utf-8")
             return
+        if u.path == "/api/rooms":
+            self._send(200, json.dumps({"rooms": room_list()}, ensure_ascii=False))
+            return
         if u.path == "/api/state":
             q = parse_qs(u.query)
             pid = (q.get("pid") or [""])[0]
-            with G.lock:
-                st = G.view(pid)
+            room_id = (q.get("room") or [""])[0]
+            info = get_room(room_id)
+            if not info:
+                self._send(200, json.dumps({"error": "房间不存在", "room_missing": True}, ensure_ascii=False))
+                return
+            game = info["game"]
+            with game.lock:
+                st = game.view(pid)
+            st.update({"room": room_id, "room_name": info["name"],
+                       "room_creator": info["creator"]})
             self._send(200, json.dumps(st, ensure_ascii=False))
             return
         self._send(404, json.dumps({"error": "not found"}, ensure_ascii=False))
@@ -725,13 +779,22 @@ class Handler(BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(n).decode("utf-8")) if n else {}
         except Exception:
             data = {}
+        if u.path == "/api/create":
+            res = create_room(data.get("room_name"), data.get("name"), data.get("bid"))
+            self._send(200, json.dumps(res, ensure_ascii=False))
+            return
         fn = ROUTES.get(u.path)
         if not fn:
             self._send(404, json.dumps({"error": "not found"}, ensure_ascii=False))
             return
+        info = get_room(data.get("room"))
+        if not info:
+            self._send(200, json.dumps({"error": "房间不存在，请返回房间列表"}, ensure_ascii=False))
+            return
+        game = info["game"]
         try:
-            with G.lock:
-                res = fn(data)
+            with game.lock:
+                res = fn(game, data)
             if "error" in res:
                 res.setdefault("ok", False)
         except Exception as e:
