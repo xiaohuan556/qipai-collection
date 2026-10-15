@@ -13,8 +13,8 @@
 <body>
 <header><div><h1>项目展示中心</h1><div class="sub">三个功能模块 · 统一入口</div></div><div class="status" id="runStatus">正在识别运行环境…</div></header>
 <nav class="nav" aria-label="功能模块">
-  <button class="active" data-target="red10Frame" data-port="8899" data-path="red10/">红十战略开发<span>牌局模块</span></button>
-  <button data-target="pokerFrame" data-port="8787" data-path="poker/">赛马安卓讨论会议<span>牌面分配</span></button>
+  <button class="active" data-target="red10Frame" data-port="8899" data-path="red10/" data-online="https://xiaohuan1314-red10-game.onrender.com/">红十战略开发<span>真人联机</span></button>
+  <button data-target="pokerFrame" data-port="8787" data-path="poker/" data-online="https://xiaohuan1314-poker-game.onrender.com/">赛马安卓讨论会议<span>真人联机</span></button>
   <button data-target="dryeyeFrame" data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
 </nav>
 <section class="stage"><div class="frame">
@@ -37,7 +37,7 @@ function openModule(btn){
 }
 buttons.forEach(btn=>btn.addEventListener('click',()=>openModule(btn)));
 document.getElementById('runStatus').innerHTML=isLocal?'本地完整运行<br>模块独立，数据互不干扰':'GitHub Pages 在线预览<br>源代码已同步';
-document.getElementById('runHint').textContent=isLocal?'启动方式：双击本文件夹里的“启动棋牌合集.bat”。如果某个模块显示连接中，请确认启动窗口仍在运行。':'干瞪眼已接入外网真人联机；红十和赛马目前仍为界面预览。免费服务长时间无人访问后，首次打开可能需要等待约一分钟。';
+document.getElementById('runHint').textContent=isLocal?'启动方式：双击本文件夹里的“启动棋牌合集.bat”。如果某个模块显示连接中，请确认启动窗口仍在运行。':'三个模块均已接入外网真人联机。切换模块不会退出原房间；免费服务长时间无人访问后，首次打开可能需要等待约一分钟。';
 openModule(buttons[0]);
 </script>
 </body></html>

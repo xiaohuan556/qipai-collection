@@ -1,5 +1,21 @@
 services:
   - type: web
+    name: xiaohuan1314-red10-game
+    runtime: python
+    plan: free
+    buildCommand: python -m py_compile red10/server.py
+    startCommand: python red10/server.py
+    healthCheckPath: /
+
+  - type: web
+    name: xiaohuan1314-poker-game
+    runtime: python
+    plan: free
+    buildCommand: python -m py_compile poker/server.py
+    startCommand: python poker/server.py
+    healthCheckPath: /
+
+  - type: web
     name: xiaohuan1314-dryeye-game
     runtime: python
     plan: free
