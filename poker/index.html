@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>赛马安卓讨论会议</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: system-ui, "Microsoft YaHei", sans-serif; background: #eef1f5; margin: 0; padding: 22px 16px 34px; color: #202a36; text-align: center; }
+  h1 { font-size: 25px; letter-spacing: .04em; margin: 8px 0 4px; color: #14263c; }
+  .sub { color: #718096; font-size: 13px; margin-bottom: 14px; }
+  .meetingMark { max-width: 900px; margin: 0 auto 10px; display:flex; justify-content:space-between; align-items:center; color:#607086; font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+  .meetingMark span:last-child { color:#a27834; font-weight:700; }
+  .panel { background: #fff; border: 1px solid #d8e0e8; border-radius: 12px; max-width: 900px; margin: 0 auto 14px; padding: 18px; box-shadow: 0 7px 22px rgba(30,49,72,.06); }
+  input { padding: 8px 10px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; width: 170px; }
+  input.num { width: 70px; }
+  button { padding: 9px 18px; font-size: 14px; border: none; border-radius: 6px; background: #244b73; color: #fff; cursor: pointer; margin: 4px; }
+  button:disabled { background: #b8c2cf; cursor: not-allowed; }
+  button.ghost { background: #edf1f5; color: #34475b; }
+  button.warn { background: #9b5b4b; }
+  button.smart { background: #9a7431; }
+  .card { display: inline-block; width: 54px; height: 76px; background: #fff; border: 1px solid #bcc8d5; border-radius: 7px;
+          margin: 4px; font-size: 19px; font-weight: 700; line-height: 76px; text-align: center;
+          box-shadow: 0 1px 3px rgba(0,0,0,.12); cursor: grab; user-select: none; vertical-align: middle;
+          touch-action: none; }
+  .card.red { color: #d2333a; }
+  .card.small { width: 46px; height: 64px; font-size: 15px; line-height: 64px; margin: 2px; }
+  .card.sel { outline: 3px solid #9a7431; transform: translateY(-4px); }
+  .card.ghostcard { position: fixed; z-index: 999; pointer-events: none; opacity: .95; transform: translate(-50%,-50%) scale(1.06) rotate(-4deg); }
+  .card[dragging="1"] { opacity: .3; }
+  .players { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; }
+  .pl { background: #f7f9fb; border: 1px solid #dce4ec; border-radius: 8px; padding: 9px 14px; min-width: 125px; }
+  .pl .nm { font-weight: 600; }
+  .pl .st { font-size: 12px; color: #547d6a; }
+  .pl .money { font-size: 13px; font-weight: 700; }
+  .pos { color: #9b5b4b; }
+  .neg { color: #547d6a; }
+  .slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 8px; }
+  .slot { border: 2px dashed #b9c5d2; border-radius: 10px; padding: 10px; min-width: 168px; background: #fbfbfc; touch-action: none; }
+  .slot.hover { border-color: #9a7431; background: #fffaf0; }
+  .slot .t { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .slot .n { font-size: 12px; color: #999; }
+  .slot .calc { font-size: 13px; margin-top: 4px; font-weight: 600; color: #4e6e91; min-height: 18px; }
+  .slot.shixt .calc.hot { color: #9b5b4b; }
+  #handWrap { margin: 10px 0; padding: 6px; border: 2px dashed transparent; border-radius: 10px; min-height: 96px; }
+  #handWrap.hover { border-color: #3577e0; background: #eef4ff; }
+  .hint { font-size: 13px; color: #777; margin: 6px 0; }
+  .hint.good { color: #2a9d3f; font-weight: 600; }
+  .pendingConfirm { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; margin: 8px auto 2px; padding: 7px 13px; border: 1px solid #ead8b5; border-radius: 999px; background: #fff8e9; color: #8a6427; font-size: 13px; font-weight: 600; }
+  .pendingConfirm::before { content: "\25CF"; margin-right: 8px; color: #d49b3f; font-size: 10px; animation: pendingPulse 1.4s ease-in-out infinite; }
+  .pendingConfirm.done { border-color: #cfe3d6; background: #f0f8f3; color: #3f7455; }
+  .pendingConfirm.done::before { content: "\2713"; color: #4f9569; animation: none; }
+  @keyframes pendingPulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+  table { border-collapse: collapse; margin: 8px auto; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid #e2e2e2; padding: 6px 8px; }
+  th { background: #f0f4f8; }
+  td.win { background: #e8f6ea; }
+  .scorebar { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; font-size: 15px; margin: 8px 0; }
+  .scorebar b { color: #d2333a; }
+  .rules { text-align: left; font-size: 13px; color: #536273; line-height: 1.8; }
+  .rules summary { cursor: pointer; font-size: 14px; color: #333; font-weight: 600; }
+  .transfers { text-align: left; max-width: 460px; margin: 8px auto; font-size: 15px; line-height: 2; }
+  .mymoney { font-size: 17px; font-weight: 700; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="meetingMark"><span>HORSE RACING / DISCUSSION</span><span>ANDROID WORKSHOP</span></div>
+<h1>赛马安卓讨论会议</h1>
+<div class="sub">牌局分配、组合推演与多人协作</div>
+<div class="sub" id="roomInfo"></div>
+
+<!-- 会议入口 -->
+<div class="panel" id="lobby">
+  <div id="joinBox">
+    <input id="nameInput" placeholder="输入参会人姓名" maxlength="10">
+    <button onclick="join()">进入会议</button>
+  </div>
+  <div class="hint" id="youLine" style="font-weight:600;color:#547d6a"></div>
+  <div class="players" id="lobbyPlayers"></div>
+  <div class="hint" id="joinTip" style="font-size:14px"></div>
+  <div class="hint" id="lobbyHint"></div>
+  <div id="hostCfg" style="display:none;margin:8px 0">
+    每张方案卡 <input class="num" id="unitInput" value="2" onchange="saveCfg()"> 点影响力
+    <label style="white-space:nowrap;margin-left:14px"><input type="checkbox" id="jokerChk" onchange="saveCfg()"> 加入通配方案卡</label>
+    <button class="ghost" onclick="saveCfg()">保存会议设置</button>
+    <div class="hint">设置将在下一轮议程生效 · 三类议题分别占用 1 / 2 / 3 张方案卡</div>
+  </div>
+  <button id="startBtn" style="display:none" onclick="api('/api/start',{pid:pid})">启动战略议程</button>
+  <button id="clearBtn" class="warn" style="display:none" onclick="if(confirm('确定清空参会名单吗？(所有人需重新进入)'))api('/api/clearplayers',{pid:pid})">清空参会名单</button>
+  <details class="rules" style="max-width:680px;margin:10px auto 0">
+    <summary>会议议程说明</summary>
+    <div style="margin-top:8px">
+      系统为每位参会人分配 6 张方案卡（可选通配卡），每人秘密将其分配到三类议题：<br>
+      ① <b>竞争格局</b>（1张）：比较单卡优先级与决策顺序。<br>
+      ② <b>关键指标</b>（2张）：综合两张卡的指标值，越接近目标区间越优。<br>
+      ③ <b>突破方案</b>（3张）：根据组合完整度、协同性与稀缺性评估。<br>
+      每个议题由一位参会人形成主导意见，并按该议题的权重记录影响力变化。<br>
+      页面会实时展示议题结果、影响力变化和累计共识；主持人可在最后生成会议行动分配。<br>
+      🔀 <b>重新抽取方案卡</b>：议程开始后、方案确认前，任何参会人都可以重新发起一次方案抽取。<br>
+      ✨ <b>生成建议分配</b>：按当前方案组合的预期影响力自动给出一个议题分配建议，可再手动调整。<br>
+      会议目标：在信息不完整的情况下，平衡短期成果与长期协同。
+    </div>
+  </details>
+</div>
+
+<!-- 议题分配 -->
+<div class="panel" id="assign" style="display:none">
+  <div class="hint">第 <span id="roundNo1"></span> 轮议程 · 单卡权重 <b id="unitShow1"></b> ·
+    <b>把方案卡拖进对应议题</b>（也可以点一下卡片再点框），拖回候选区可取消</div>
+  <div id="handWrap"><div id="hand"></div></div>
+  <div class="slots">
+    <div class="slot" data-k="bi"><div class="t">⚔️ 竞争格局 · 1张 · 权重2</div><div class="n">放 1 张</div><div class="cards"></div><div class="calc"></div></div>
+    <div class="slot shixt" data-k="shi"><div class="t">🔟 关键指标 · 2张 · 权重4</div><div class="n">放 2 张</div><div class="cards"></div><div class="calc"></div></div>
+    <div class="slot" data-k="zha"><div class="t">🂡 突破方案 · 3张 · 权重6</div><div class="n">放 3 张</div><div class="cards"></div><div class="calc"></div></div>
+  </div>
+  <div style="margin-top:12px">
+    <button class="smart" onclick="autoSplit()">✨ 生成建议分配</button>
+    <button class="ghost" onclick="shuffleDeal()">🔀 重新抽取方案卡</button>
+    <button class="ghost" onclick="resetGroups()">重新分配</button>
+    <button id="confirmBtn" onclick="confirmAssign()">确认议题分配</button>
+  </div>
+  <div class="hint" id="shuffleHint"></div>
+  <div class="hint" id="autoHint"></div>
+  <div class="hint" id="assignHint"></div>
+  <div><div class="pendingConfirm" id="pendingConfirm" aria-live="polite"></div></div>
+  <div class="scorebar" id="moneyBar1"></div>
+</div>
+
+<!-- 议题结果 -->
+<div class="panel" id="reveal" style="display:none">
+  <div class="hint">第 <span id="roundNo2"></span> 轮议题结果 · 单卡权重 <b id="unitShow2"></b></div>
+  <div class="mymoney" id="myMoneyLine"></div>
+  <div id="resultTables"></div>
+  <div class="scorebar" id="scorebar"></div>
+  <div class="hint" id="loserHint"></div>
+  <div id="hostBtns" style="display:none">
+    <button onclick="api('/api/next',{pid:pid})">进入下一议题</button>
+    <button class="warn" onclick="if(confirm('确定形成会议结论吗？'))api('/api/settle',{pid:pid})">形成会议结论</button>
+  </div>
+</div>
+
+<!-- 结算 -->
+<div class="panel" id="settled" style="display:none">
+  <h2 style="font-size:18px">📌 会议总结与行动分配</h2>
+  <div class="scorebar" id="finalBar"></div>
+  <div class="transfers" id="transferList"></div>
+  <div class="hint">请根据上面的行动分配确认后续负责人和资源倾斜</div>
+  <button id="newMatchBtn" onclick="api('/api/newmatch',{pid:pid})">开启下一轮会议（清空本轮记录）</button>
+</div>
+
+<div class="panel" id="waiting" style="display:none"><div class="hint">连接中…</div></div>
+
+<button id="abortBtn" class="warn" style="display:none;position:fixed;right:14px;bottom:14px;z-index:50"
+        onclick="endMatch()">⚠️ 结束当前牌局</button>
+
+<script>
+let pid = localStorage.getItem("poker_pid") || "";
+let S = null;
+let groups = { bi: [], shi: [], zha: [] };
+let sel = null;
+let lastDeal = -1;
+let demoMode = false;
+const DEMO_HAND = ["H14", "D13", "S10", "C9", "H7", "D3"];
+
+const SLOT_MAX = { bi: 1, shi: 2, zha: 3 };
+const SUIT = { S: "♠", H: "♥", C: "♣", D: "♦" };
+const RANK = { 11: "J", 12: "Q", 13: "K", 14: "A" };
+
+/* ---------- 牌面 ---------- */
+function cardHtml(code, cls, from) {
+  let txt, red = false;
+  if (code === "XB") { txt = "🃏<small>大王</small>"; red = true; }
+  else if (code === "XS") { txt = "🃏<small>小王</small>"; }
+  else {
+    const s = code[0], r = parseInt(code.slice(1));
+    red = (s === "H" || s === "D");
+    txt = SUIT[s] + (RANK[r] || r);
+  }
+  return `<span class="card${red ? " red" : ""} ${cls || ""}" data-c="${code}" data-from="${from || "hand"}">${txt}</span>`;
+}
+
+function moneyHtml(v) {
+  if (v > 0) return `<span class="money pos">+${v}影响力</span>`;
+  if (v < 0) return `<span class="money neg">${v}影响力</span>`;
+  return `<span class="money" style="color:#999">0影响力</span>`;
+}
+
+/* ---------- 十点半辅助计算 ---------- */
+function thPts(c) {
+  if (c[0] === "X") return null;          // 王: 待定
+  const r = parseInt(c.slice(1));
+  if (r === 14) return 1;
+  if (r >= 11) return 0.5;
+  return r;
+}
+const TCANDS = [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+function tenHalfInfo(cards) {
+  const real = cards.filter(c => c[0] !== "X");
+  const jokers = cards.filter(c => c[0] === "X");
+  const base = real.reduce((s, c) => s + thPts(c), 0);
+  let combos = [[]];
+  for (let i = 0; i < jokers.length; i++) {
+    const next = [];
+    for (const combo of combos) for (const v of TCANDS) next.push(combo.concat([v]));
+    combos = next;
+  }
+  let best = null, bestRaw = null, bestVals = null;
+  for (const vals of combos) {
+    const raw = base + vals.reduce((s, v) => s + v, 0);
+    const t = raw > 10.5 ? raw - 10 : raw;
+    if (best === null || t > best) { best = t; bestRaw = raw; bestVals = vals; }
+  }
+  let txt = `合计 ${best}点`;
+  if (bestRaw > 10.5) txt += `（${bestRaw}减10）`;
+  if (bestVals && bestVals.length) txt += `，王当${bestVals.join("、")}`;
+  if (best === 10.5) txt += " ✓最大";
+  return { text: txt, hot: best === 10.5 };
+}
+
+/* ---------- 接口 ---------- */
+async function api(path, body) {
+  if (demoMode) {
+    if (path === "/api/join") {
+      const name = String(body && body.name || "参会人").slice(0, 10);
+      const demoPid = "demo-user";
+      if (!S.you) {
+        S.you = { pid: demoPid, name, cards: DEMO_HAND.slice(), assign: null, locked: false };
+        S.players = [{ pid: demoPid, name, ready: false, money: 0 }];
+      }
+      return { pid: demoPid };
+    }
+    if (path === "/api/config") {
+      S.unit = Number(body.unit) || 2;
+      S.use_jokers = !!body.use_jokers;
+      return { ok: true };
+    }
+    if (path === "/api/autosplit") {
+      return { groups: { bi: ["H14"], shi: ["D13", "S10"], zha: ["C9", "H7", "D3"] }, probs: { bi: .82, shi: .68, zha: .57 }, ev: 3.4 };
+    }
+    if (path === "/api/abort") {
+      S.phase = "lobby";
+      S.round_no = 0;
+      S.results = null;
+      S.settle = null;
+      if (S.you) S.you = { pid: S.you.pid, name: S.you.name, cards: DEMO_HAND.slice(), assign: null, locked: false };
+      S.players = (S.players || []).map(p => ({ ...p, ready: false, money: 0 }));
+      return { ok: true };
+    }
+    return { ok: true };
+  }
+  const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  return r.json();
+}
+
+function bidGet() {
+  let b = localStorage.getItem("poker_bid");
+  if (!b) { b = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("poker_bid", b); }
+  return b;
+}
+
+async function join() {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) return alert("先输入名字");
+  const res = await api("/api/join", { name, bid: bidGet() });
+  if (res.error) return alert(res.error);
+  pid = res.pid;
+  localStorage.setItem("poker_pid", pid);
+  await poll();                        // 立刻同步, 不等下一次轮询
+}
+
+async function endMatch() {
+  if (!S || !S.you || S.phase === "lobby") return;
+  if (!confirm("确定立即结束当前牌局并回到大厅吗？本局不计输赢。")) return;
+  const r = await api("/api/abort", { pid });
+  if (r.error) return alert(r.error);
+  groups = { bi: [], shi: [], zha: [] };
+  sel = null;
+  lastDeal = -1;
+  await poll();
+}
+
+function kickPlayer(t) { if (confirm("确定移除这个玩家吗？")) api("/api/kick", { pid, target: t }); }
+
+let cfgSaving = false;   // 保存设置期间不让轮询覆盖勾选/输入
+
+async function saveCfg() {
+  cfgSaving = true;
+  const unit = parseFloat(document.getElementById("unitInput").value) || 2;
+  const jokers = document.getElementById("jokerChk").checked;
+  const r = await api("/api/config", { pid, unit, use_jokers: jokers });
+  if (r.error) alert(r.error);
+  await poll();            // 立刻同步一次, 让界面与服务器一致
+  cfgSaving = false;
+}
+
+/* ---------- 分组 ---------- */
+function resetGroups() {
+  if (S && S.you && S.you.locked) return;
+  groups = { bi: [], shi: [], zha: [] };
+  sel = null;
+  document.getElementById("autoHint").textContent = "";
+  renderAssign();
+}
+
+function removeFromGroup(code, from) {
+  if (!from || from === "hand") return;
+  const i = groups[from].indexOf(code);
+  if (i >= 0) groups[from].splice(i, 1);
+}
+
+function placeCard(code, from, to) {
+  removeFromGroup(code, from);
+  if (groups[to].length < SLOT_MAX[to]) groups[to].push(code);
+  renderAssign();
+}
+
+async function autoSplit() {
+  const r = await api("/api/autosplit", { pid });
+  if (r.error) return alert(r.error);
+  groups = { bi: r.groups.bi.slice(), shi: r.groups.shi.slice(), zha: r.groups.zha.slice() };
+  sel = null;
+  renderAssign();
+  const pct = p => Math.round(p * 100) + "%";
+  document.getElementById("autoHint").innerHTML =
+    `✨ 已按预期影响力生成分配：竞争格局 <b>${pct(r.probs.bi)}</b> · 关键指标 <b>${pct(r.probs.shi)}</b> · 突破方案 <b>${pct(r.probs.zha)}</b>` +
+    ` ｜ 预计影响力 <b>${r.ev >= 0 ? "+" : ""}${r.ev}</b>（可根据会议判断再手动调整）`;
+}
+
+async function confirmAssign() {
+  const res = await api("/api/assign", { pid, groups });
+  if (res.error) alert(res.error);
+}
+
+async function shuffleDeal() {
+  if (!confirm("确定重新抽取方案卡吗？所有参会人的议题分配都会重置。")) return;
+  const r = await api("/api/shuffle", { pid });
+  if (r.error) alert(r.error);
+}
+
+/* ---------- 拖动摆放（鼠标 + 触屏都可用） ---------- */
+let drag = null;
+
+function ghostAt(x, y, code) {
+  const el = document.createElement("div");
+  el.innerHTML = cardHtml(code, "ghostcard", "ghost");
+  document.body.appendChild(el.firstElementChild);
+  return document.querySelector(".ghostcard");
+}
+
+function moveGhost(el, x, y) {
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+}
+
+function dropTargetAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const cardEl = el.closest(".card");
+  if (cardEl && cardEl.dataset.from !== "ghost") {
+    // 拖到另一个框里的牌上: 也算落到那个框
+    if (cardEl.dataset.from !== "hand") return cardEl.dataset.from;
+  }
+  const slot = el.closest(".slot");
+  if (slot) return slot.dataset.k;
+  if (el.closest("#handWrap")) return "hand";
+  return null;
+}
+
+function highlight(x, y) {
+  document.querySelectorAll(".slot").forEach(s => s.classList.remove("hover"));
+  document.getElementById("handWrap").classList.remove("hover");
+  const t = dropTargetAt(x, y);
+  if (t === "hand") document.getElementById("handWrap").classList.add("hover");
+  else if (t) document.querySelector(`.slot[data-k="${t}"]`).classList.add("hover");
+}
+
+document.addEventListener("pointerdown", e => {
+  const cardEl = e.target.closest(".card");
+  if (!cardEl || cardEl.classList.contains("ghostcard")) return;
+  if (!S || S.phase !== "assign" || (S.you && S.you.locked)) return;
+  drag = { code: cardEl.dataset.c, from: cardEl.dataset.from, sx: e.clientX, sy: e.clientY, moved: false, el: null, src: cardEl };
+  e.preventDefault();
+});
+
+document.addEventListener("pointermove", e => {
+  if (!drag) return;
+  if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) {
+    drag.moved = true;
+    drag.el = ghostAt(e.clientX, e.clientY, drag.code);
+    drag.src.setAttribute("dragging", "1");
+  }
+  if (drag.moved) {
+    moveGhost(drag.el, e.clientX, e.clientY);
+    highlight(e.clientX, e.clientY);
+  }
+});
+
+function endDrag(e) {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  document.querySelectorAll(".slot").forEach(s => s.classList.remove("hover"));
+  document.getElementById("handWrap").classList.remove("hover");
+  d.src && d.src.removeAttribute("dragging");
+  if (d.el) d.el.remove();
+  if (d.moved) {
+    const t = dropTargetAt(e.clientX, e.clientY);
+    if (t === "hand") { removeFromGroup(d.code, d.from); renderAssign(); }
+    else if (t) { placeCard(d.code, d.from, t); }
+    else { renderAssign(); }
+  } else {
+    // 没移动 = 点击: 手牌 -> 选中; 框里的牌 -> 拿回手牌
+    if (d.from === "hand") { sel = (sel === d.code) ? null : d.code; }
+    else { removeFromGroup(d.code, d.from); }
+    renderAssign();
+  }
+}
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", endDrag);
+
+/* 点击框: 把选中的牌放进去（键盘/鼠标兼容） */
+document.querySelectorAll(".slot").forEach(slot => {
+  slot.addEventListener("click", (e) => {
+    if (e.target.closest(".card")) return;   // 点的是牌本身, 交给拖动/点击逻辑处理
+    if (!S || S.phase !== "assign" || (S.you && S.you.locked)) return;
+    const k = slot.dataset.k;
+    if (sel) { placeCard(sel, "hand", k); sel = null; }
+    else if (groups[k].length) { groups[k].pop(); renderAssign(); }
+  });
+});
+
+/* ---------- 渲染 ---------- */
+function render() {
+  if (!S) return;
+  let ph = S.phase;
+  if (ph !== "lobby" && !S.you) ph = "lobby";
+  document.getElementById("abortBtn").style.display = S.you && ["assign", "reveal", "settled"].includes(ph) ? "inline-block" : "none";
+  document.getElementById("lobby").style.display = ph === "lobby" ? "" : "none";
+  document.getElementById("assign").style.display = ph === "assign" ? "" : "none";
+  document.getElementById("reveal").style.display = ph === "reveal" ? "" : "none";
+  document.getElementById("settled").style.display = ph === "settled" ? "" : "none";
+  document.getElementById("waiting").style.display = "none";
+  const localHost = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(location.hostname);
+  document.getElementById("roomInfo").textContent = ph === "lobby"
+    ? (demoMode
+        ? `浏览器演示模式 · 单卡权重 ${S.unit}`
+        : localHost
+        ? `局域网参会入口： http://${S.lan_ip}:${location.port || 8787} · 单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`
+        : `会议链接：${location.origin} · 单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`)
+    : `单卡权重 ${S.unit}${S.use_jokers ? " · 含通配方案卡" : ""}`;
+  document.getElementById("unitShow1").textContent = S.unit;
+  document.getElementById("unitShow2").textContent = S.unit;
+
+  if (ph === "lobby") {
+    document.getElementById("joinBox").style.display = S.you ? "none" : "";
+    document.getElementById("youLine").textContent = S.you ? `你已进入会议：${S.you.name}` : "";
+    document.getElementById("lobbyPlayers").innerHTML = S.players.map(p => {
+      const canKick = S.is_host && S.you && p.pid !== S.you.pid;
+      return `<div class="pl"><div class="nm">${p.name}${canKick ? ` <a href="javascript:void(0)" onclick="kickPlayer('${p.pid}')" style="color:#9b5b4b;font-size:12px">✕移除</a>` : ""}</div><div class="st">已签到</div>${moneyHtml(p.money)}</div>`;
+    }).join("");
+    document.getElementById("lobbyHint").textContent = `已签到 ${S.players.length}/4 人`;
+    const sb = document.getElementById("startBtn");
+    const tip = document.getElementById("joinTip");
+    if (!S.you) {
+      // 还没进入会议: 引导先进入, 进入后才会出现「启动战略议程」
+      sb.style.display = "none";
+      tip.innerHTML = S.game_running
+        ? `⚠️ 当前<b>正在进行一轮议程</b>，等参会人进入下一议题或形成会议结论后，再输入姓名进入。`
+        : `① 在上面输入姓名 → 点「<b>进入会议</b>」　② 进入后会出现「<b>启动战略议程</b>」按钮（任一参会人都可以启动，≥2 人即可）`;
+    } else {
+      sb.style.display = "";
+      sb.disabled = S.players.length < 2;
+      tip.innerHTML = S.players.length < 2
+        ? `你已进入会议，还差人：<b>至少 2 人</b>才能启动（现在 ${S.players.length} 人）`
+        : `参会人已就位！点「<b>启动战略议程</b>」开始方案推演 —— 任一参会人都可以启动`;
+    }
+    document.getElementById("clearBtn").style.display = S.is_host ? "" : "none";
+    document.getElementById("hostCfg").style.display = S.is_host ? "" : "none";
+    if (S.is_host && !cfgSaving) {
+      document.getElementById("jokerChk").checked = S.use_jokers;
+      const ui = document.getElementById("unitInput");
+      if (document.activeElement !== ui && parseFloat(ui.value) !== S.unit) ui.value = S.unit;
+    }
+  }
+
+  if (ph === "assign") {
+    if (S.deal_id !== lastDeal) {
+      lastDeal = S.deal_id;
+      groups = { bi: [], shi: [], zha: [] };
+      sel = null;
+      document.getElementById("autoHint").textContent = "";
+      document.getElementById("shuffleHint").textContent = S.shuffle_count
+        ? `🔀 ${S.last_shuffle} 重新抽取了方案卡（第 ${S.shuffle_count} 次），议题材料已更新` : "";
+    }
+    document.getElementById("roundNo1").textContent = S.round_no;
+    renderAssign();
+    const done = S.players.filter(p => p.ready).length;
+    document.getElementById("assignHint").textContent = S.you.locked
+      ? `议题分配已提交，等待其他参会人… (${done}/${S.players.length})` : `已提交 ${done}/${S.players.length}`;
+    const pendingNames = S.players.filter(p => !p.ready).map(p => p.name);
+    const pendingConfirm = document.getElementById("pendingConfirm");
+    pendingConfirm.textContent = pendingNames.length
+      ? `${pendingNames.join("、")} 还在确认中…`
+      : "所有人已确认，正在汇总议题结果…";
+    pendingConfirm.classList.toggle("done", pendingNames.length === 0);
+    document.getElementById("confirmBtn").style.display = S.you.locked ? "none" : "";
+    moneyBar("moneyBar1");
+  }
+
+  if (ph === "reveal") {
+    lastDeal = -1;
+    document.getElementById("roundNo2").textContent = S.round_no;
+    const R = S.results;
+    const mePid = S.you.pid;
+    let myDelta = 0;
+    for (const r of R.rounds) myDelta += (r.delta[mePid] || 0);
+    const myTotal = S.players.find(p => p.pid === mePid).money;
+    document.getElementById("myMoneyLine").innerHTML =
+      `本轮影响力 ${moneyHtml(myDelta)} ｜ 累计 ${moneyHtml(myTotal)}`;
+    document.getElementById("resultTables").innerHTML = R.rounds.map(r => `
+      <table>
+        <tr><th style="width:150px">${r.name}<br><small style="color:#9b5b4b">主导方 +${r.pot}影响力/人</small></th>
+        ${S.players.map(p => `<th style="${p.pid === r.winner ? "background:#dff0e2" : ""}">${p.name}${p.pid === r.winner ? " ◆" : ""}</th>`).join("")}</tr>
+        <tr><td>方案卡</td>${S.players.map(p => `<td class="${p.pid === r.winner ? "win" : ""}">${r.show[p.pid]}<br><small>${r.desc[p.pid]}</small></td>`).join("")}</tr>
+        <tr><td>本议题变化</td>${S.players.map(p => {
+          const d = r.delta[p.pid] || 0;
+          return `<td>${d > 0 ? `<span class="pos">+${d}影响力</span>` : d < 0 ? `<span class="neg">${d}影响力</span>` : "-"}</td>`;
+        }).join("")}</tr>
+        <tr><td>累计影响力</td>${S.players.map(p => {
+          const m = r.money_after[p.pid] || 0;
+          return `<td>${m > 0 ? `<span class="pos">+${m}</span>` : m < 0 ? `<span class="neg">${m}</span>` : "0"}影响力</td>`;
+        }).join("")}</tr>
+      </table>`).join("");
+    const sc = R.scores;
+    document.getElementById("scorebar").innerHTML = S.players.map(p =>
+      `<div>${p.name}: <b>${sc[p.pid] || 0}</b> 次主导 ${moneyHtml(p.money)}</div>`).join("");
+    const min = Math.min(...S.players.map(p => sc[p.pid] || 0));
+    const losers = S.players.filter(p => (sc[p.pid] || 0) === min).map(p => p.name);
+    document.getElementById("loserHint").textContent = `当前需要补强的议题角色: ${losers.join("、")}`;
+    document.getElementById("hostBtns").style.display = S.you ? "" : "none";
+  }
+
+  if (ph === "settled") {
+    const st = S.settle;
+    document.getElementById("finalBar").innerHTML = S.players.map(p =>
+      `<div>${p.name}: ${moneyHtml(p.money)}</div>`).join("");
+    const t = st.transfers;
+    document.getElementById("transferList").innerHTML = t.length
+      ? t.map(x => `<div>📌 ${st.names[x.from]} → 行动资源 → <b>${st.names[x.to]}</b> ：<b style="color:#9b5b4b">${x.amount} 影响力</b></div>`).join("")
+      : "<div>各方影响力已平衡，无需额外调整 🎉</div>";
+    document.getElementById("newMatchBtn").style.display = S.you ? "" : "none";
+  }
+}
+
+function moneyBar(elId) {
+  document.getElementById(elId).innerHTML = S.players.map(p =>
+    `<div>${p.name}: ${moneyHtml(p.money)}</div>`).join("");
+}
+
+function renderAssign() {
+  if (!S || !S.you) return;
+  const used = new Set([...groups.bi, ...groups.shi, ...groups.zha]);
+  const hand = S.you.cards.filter(c => !used.has(c));
+  document.getElementById("hand").innerHTML = hand.map(c =>
+    cardHtml(c, c === sel ? "sel" : "", "hand")).join("") || '<span class="hint">候选方案卡都已分配（拖/点议题框里的卡片可以拿回来）</span>';
+  for (const k of ["bi", "shi", "zha"]) {
+    const slotEl = document.querySelector(`.slot[data-k="${k}"]`);
+    slotEl.querySelector(".n").textContent = `放 ${SLOT_MAX[k]} 张 (已有 ${groups[k].length})`;
+    slotEl.querySelector(".cards").innerHTML = groups[k].map(c => cardHtml(c, "small", k)).join("");
+    const calc = slotEl.querySelector(".calc");
+    if (k === "shi") {
+      if (groups.shi.length === 0) { calc.textContent = ""; calc.classList.remove("hot"); }
+      else {
+        const info = tenHalfInfo(groups.shi);
+        calc.textContent = info.text + (groups.shi.length < 2 ? `（还差 ${2 - groups.shi.length} 张）` : "");
+        calc.classList.toggle("hot", !!info.hot);
+      }
+    } else if (k === "bi") {
+      calc.textContent = groups.bi.length ? (groups.bi[0][0] === "X" ? "王最大" : "") : "";
+    } else {
+      calc.textContent = "";
+    }
+  }
+  const full = groups.bi.length === 1 && groups.shi.length === 2 && groups.zha.length === 3;
+  document.getElementById("confirmBtn").disabled = !full;
+}
+
+async function poll() {
+  const myPid = pid;                   // 记住本次请求用的身份
+  try {
+    const r = await fetch("/api/state?pid=" + myPid);
+    const st = await r.json();
+    if (myPid !== pid) return;         // 期间身份已变化(刚点了加入), 丢弃过期响应
+    if (st.you === null && pid) { pid = ""; localStorage.removeItem("poker_pid"); }
+    S = st;
+    render();
+  } catch (e) {
+    if (myPid !== pid) return;
+    if (!demoMode) {
+      demoMode = true;
+      S = {
+        phase: "lobby", round_no: 0, lan_ip: "", unit: 2, use_jokers: false,
+        is_host: true, players: [], you: null, scores: {}, results: null, settle: null,
+        game_running: false
+      };
+      render();
+      return;
+    }
+    render();
+    return;
+  }
+}
+setInterval(poll, 1000);
+poll();
+</script>
+</body>
+</html>

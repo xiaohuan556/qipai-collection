@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>红十战略开发</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --panel:#fff; --line:#e2e3e7; --txt:#1c1c1e; --sub:#8a8a90;
+    --green:#2a9d3f; --red:#d92b2b; --blue:#2f6fed; --gold:#c58a12;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;padding:14px 14px 90px}
+  h1{font-size:20px;margin:0 0 2px}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:10px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 auto 12px;max-width:920px}
+  .hint{color:var(--sub);font-size:13px}
+  button{font:inherit;padding:9px 18px;border-radius:9px;border:1px solid var(--blue);
+         background:var(--blue);color:#fff;cursor:pointer;margin:3px 4px 3px 0}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:#fff;color:var(--txt);border-color:var(--line)}
+  button.warn{background:#fff;color:var(--red);border-color:#f0b4b4}
+  button.liang{background:var(--red);border-color:var(--red)}
+  button.jiu{background:var(--gold);border-color:var(--gold)}
+  input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:9px;width:150px}
+  input.num{width:70px;text-align:center}
+  /* 牌 */
+  .card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+        width:52px;height:74px;background:#fff;border:1px solid #cfd0d6;border-radius:8px;
+        font-weight:700;font-size:20px;line-height:1.05;color:#111;user-select:none;
+        box-shadow:0 1px 3px rgba(0,0,0,.09);position:relative;margin:3px;vertical-align:top}
+  .card.red{color:var(--red)}
+  .card small{font-size:10px;font-weight:400;color:var(--sub)}
+  .card.red10{border:2px solid var(--red);box-shadow:0 0 0 2px rgba(217,43,43,.15),0 1px 4px rgba(0,0,0,.12)}
+  .card.big{width:62px;height:88px;font-size:24px}
+  .card.sm{width:38px;height:54px;font-size:14px;border-radius:6px;margin:2px}
+  .card.sm small{font-size:8px}
+  .card.pick{cursor:pointer}
+  .card.reorderable{cursor:grab;touch-action:none}
+  .card.reorderable:active{cursor:grabbing}
+  .card.dragging{opacity:.35;transform:scale(.96)}
+  .card.drop-target{border-color:var(--gold);box-shadow:0 0 0 3px rgba(197,138,18,.22)}
+  .card.reorder-picked{transform:translateY(-8px);border-color:var(--gold);box-shadow:0 0 0 2px rgba(197,138,18,.28),0 3px 9px rgba(0,0,0,.16)}
+  .card.sel{transform:translateY(-12px);border-color:var(--blue);box-shadow:0 0 0 2px rgba(47,111,237,.28),0 3px 9px rgba(0,0,0,.16)}
+  .hand{display:flex;flex-wrap:wrap;align-items:flex-end;min-height:96px;padding:12px 6px 4px}
+  .hand-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .hand-head .hint{flex:1;min-width:240px}
+  .hand-tools{display:flex;gap:5px;flex-wrap:wrap}
+  .hand-tools button{margin:0;padding:6px 10px;font-size:13px}
+  /* 座位 */
+  .seats{display:flex;gap:10px;flex-wrap:wrap}
+  .seat{flex:1 1 180px;min-width:170px;background:#fafafb;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .seat.me{background:#f0f5ff;border-color:#c6d8fb}
+  .seat.turn{border-color:var(--blue);box-shadow:0 0 0 2px rgba(47,111,237,.18)}
+  .seat.out{opacity:.55}
+  .seat .nm{font-weight:700}
+  .seat .cnt{color:var(--sub);font-size:13px}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:1px}
+  .tag.red{background:#fdeaea;color:var(--red);border:1px solid #f5c2c2}
+  .tag.gray{background:#eee;color:#777}
+  .tag.green{background:#e8f6ea;color:var(--green);border:1px solid #bde5c4}
+  .money{font-weight:700;font-size:13px}
+  .money.pos{color:var(--red)}   /* 中式：赢=红 */
+  .money.neg{color:var(--green)} /* 输=绿 */
+  /* 桌面 */
+  .board{background:#fafafb;border:1px dashed #d5d6dc;border-radius:10px;padding:10px;min-height:86px;margin:10px 0}
+  .board .lbl{font-size:12px;color:var(--sub);margin-bottom:4px}
+  .trickline{font-size:13px;color:#444;padding:2px 0}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
+  .pill{background:#f0f0f3;border-radius:20px;padding:2px 10px;font-size:12px;color:#555}
+  .pill.on{background:#fdeaea;color:var(--red);font-weight:700}
+  .tbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:center}
+  .tbl th{color:var(--sub);font-weight:500;font-size:12px}
+  .tbl td.l{text-align:left}
+  details.rules{max-width:920px;margin:0 auto}
+  details.rules summary{cursor:pointer;color:var(--sub);font-size:13px}
+  details.rules div{font-size:13px;color:#444;line-height:1.85;margin-top:8px}
+  .big-result{font-size:22px;font-weight:800;margin:2px 0 6px}
+  .guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+  .guide-card{background:#fafafb;border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+  .guide-card h3{font-size:15px;margin:0 0 4px}
+  .guide-card p{margin:0;color:#4e4e54;font-size:13px;line-height:1.75}
+  .strategy-note{background:#fff8e8;border:1px solid #f1d493;color:#654b12;border-radius:9px;padding:9px 11px;margin-top:10px;font-size:13px;line-height:1.75}
+  .rule-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  .rule-table th,.rule-table td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+  .rule-table th{color:var(--sub);font-weight:600}
+  @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
+         padding:9px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
+  #toast.show{opacity:.93}
+</style>
+</head>
+<body>
+
+<h1>🃏 红十战略开发</h1>
+<div class="sub" id="roomInfo">四人一桌 · 一副牌去掉大小王和 3、4、5（40 张）· 每人 10 张</div>
+
+<!-- ============ 大厅 ============ -->
+<div class="panel" id="lobby">
+  <div id="joinBox">
+    <input id="nameInput" placeholder="输入你的名字" maxlength="10">
+    <button onclick="join()">加入</button>
+  </div>
+  <div class="hint" id="youLine" style="font-weight:600;color:var(--green)"></div>
+  <div class="seats" id="lobbyPlayers" style="margin-top:10px"></div>
+  <div class="hint" id="joinTip" style="font-size:14px;margin-top:10px"></div>
+  <div id="hostCfg" style="display:none;margin:12px 0">
+    <label>底：每人 <input class="num" id="baseInput" value="2" onchange="saveBase()"> 元</label>
+    <button class="ghost" onclick="saveBase()">保存</button>
+    <div class="hint">底 × 2<sup>倍数</sup>：亮/揪 ×2，每扔一个炸弹再 ×2（双红十也算炸弹）。例：底2 + 亮 + 3个炸弹 = 每人 32 元。</div>
+  </div>
+  <button id="startBtn" style="display:none" onclick="api('/api/start',{pid:pid}).then(poll)">开始游戏</button>
+  <button id="clearBtn" class="warn" style="display:none"
+          onclick="if(confirm('确定清空所有玩家吗？(所有人需重新加入)'))api('/api/clear',{pid:pid}).then(poll)">清空所有人</button>
+  <div class="hint" id="lobbyHint" style="margin-top:8px"></div>
+</div>
+
+<!-- ============ 亮牌 / 揪牌 ============ -->
+<div class="panel" id="declare" style="display:none">
+  <div class="bar">
+    <span class="pill">第 <b id="dRound"></b> 局</span>
+    <span class="pill">底 <b id="dBase"></b> 元</span>
+    <span class="pill" id="dDeclared"></span>
+  </div>
+  <div class="hint">这是你的 10 张牌 —— <b>有红十可以「亮红十」</b>；没红十但手里有「三张一样」可以「揪牌」逼红十亮出来。亮或揪都算开局翻倍。</div>
+  <div class="hand-head">
+    <div class="hint">手牌只在你这台设备保存排序，不影响牌局；可直接拖牌，或点“调整牌序”后点两张交换。</div>
+    <div class="hand-tools"><button class="ghost" id="dReorderBtn" onclick="toggleReorder()">↔ 调整牌序</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
+  </div>
+  <div class="hand" id="dHand"></div>
+  <div style="margin-top:8px">
+    <button id="btnLiang" class="liang" onclick="declare('liang')">🔴 亮红十</button>
+    <button id="btnJiu" class="jiu" onclick="declare('jiu')">🔍 揪牌</button>
+    <button id="btnSur" class="warn" onclick="if(confirm('确定投降？每人输 '+ (S.base*4) +' 元'))declare('surrender')">🏳️ 投降</button>
+    <button id="btnOk" onclick="declare('ok')">不亮，开始出牌</button>
+  </div>
+  <div class="hint" id="dHint" style="margin-top:8px"></div>
+  <div class="seats" id="dSeats" style="margin-top:10px"></div>
+</div>
+
+<!-- ============ 打牌 ============ -->
+<div class="panel" id="play" style="display:none">
+  <div class="bar">
+    <span class="pill">第 <b id="pRound"></b> 局</span>
+    <span class="pill">底 <b id="pBase"></b> 元</span>
+    <span class="pill" id="pDeclared"></span>
+    <span class="pill" id="pBombs"></span>
+    <span class="pill" id="pTurn"></span>
+  </div>
+  <div class="seats" id="pSeats"></div>
+
+  <div class="board">
+    <div class="lbl">桌面上（上一手）</div>
+    <div id="lastPlay"></div>
+    <div id="jiefengLine" style="color:#c58a12;font-weight:700;font-size:13px;margin:2px 0"></div>
+    <div id="trickList"></div>
+  </div>
+
+  <div class="hand-head">
+    <div class="hint">轮到你时，点牌选中 → 出牌；管不上就「不要」。<span id="reorderHint"></span></div>
+    <div class="hand-tools"><button class="ghost" id="pReorderBtn" onclick="toggleReorder()">↔ 调整牌序</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
+  </div>
+  <div class="hand" id="pHand"></div>
+  <div id="selInfo" class="hint" style="margin-top:2px"></div>
+  <div style="margin-top:8px">
+    <button id="btnPlay" onclick="doPlay()">出牌</button>
+    <button id="btnPass" class="ghost" onclick="doPass()">不要</button>
+    <button class="ghost" onclick="sel.clear();render()">清空选择</button>
+  </div>
+</div>
+
+<!-- ============ 结果 ============ -->
+<div class="panel" id="result" style="display:none">
+  <div class="big-result" id="rText"></div>
+  <div class="hint" id="rMult"></div>
+  <div id="rRoles" style="margin-top:8px"></div>
+  <table class="tbl" id="rTable"></table>
+  <div class="hint" style="margin-top:10px" id="rTransfer"></div>
+  <div class="hint" style="margin-top:6px" id="rOrder"></div>
+  <div style="margin-top:10px">
+    <button onclick="api('/api/next',{pid:pid}).then(poll)">下一局</button>
+    <button class="warn" id="btnResetMoney" onclick="if(confirm('清空累计账目？(回大厅重新开始)'))api('/api/resetmoney',{pid:pid}).then(poll)">清空账目</button>
+  </div>
+</div>
+
+<div class="panel" id="waiting" style="display:none"><div class="hint">连接中…</div></div>
+
+<details class="rules">
+  <summary>玩法说明（点开）</summary>
+  <div>
+    <b>牌</b>：一副牌去掉大小王和 3、4、5，共 40 张，4 人每人 10 张。<br>
+    <b>单张大小</b>：红10 &gt; 2 &gt; A &gt; K &gt; Q &gt; J &gt; 黑10 &gt; 9 &gt; 8 &gt; 7 &gt; 6<br>
+    <b>组合大小</b>：2 &gt; A &gt; K &gt; Q &gt; J &gt; 10（红黑都当普通10）&gt; 9 &gt; … &gt; 6<br>
+    <b>牌型</b>：单张、对子、<b>单龙</b>（顺子，≥3 张相连，QKA 也算，2 不入顺）、<b>双龙</b>（连对，≥3 对相连，2 不入连）、三张、四张、双红十。<br>
+    <b>管牌</b>：单管单，对管对，单龙管单龙，双龙管双龙（张数要一样）；<b>三张</b>（炸弹）可管单/对/单龙；<b>四张</b>（炸弹）可管单/对/单龙/双龙/三张；<b>双红十</b>最大，管任意牌型。三张管不了双龙。<br>
+    <b>接风</b>：出完牌的人如果对方都要不上，<b>队友接风</b>先出（暗打时队伍没明朗，按顺序由下家接）。<br>
+    <b>双红十</b>：两张红十不能凑对、不能凑顺，但可以凑三个十。<b>四个十直接赢三家。</b><br>
+    <b>亮牌 / 揪牌</b>：发完牌后有红十的可以「亮红十」（同时拿两张就一起亮）；没红十而有「三张一样」的可以「揪」，逼红十玩家亮出来。亮或揪 = 明打，开局翻倍。<br>
+    <b>出牌</b>：每局第一手由抓到 <b>红桃6</b> 的人先出；之后每手由上一手最后出牌的人先出。<br>
+    <b>输赢</b>：红十持有者一队，其余人为另一队（一人拿双红十则 1 打 3）。<br>
+    &nbsp;&nbsp;· 红十方赢：把红十都走掉（双红十第一个走完即赢）<br>
+    &nbsp;&nbsp;· 平局：一张红十走掉、另一张被抓（双红十被人先跑掉两个算平局）<br>
+    &nbsp;&nbsp;· 平民方赢：红十全被抓<br>
+    <b>算钱</b>：每人金额 = 底 × 2<sup>(亮/揪 + 炸弹数)</sup>，输的人按人头付给赢家。四个十 / 投降固定 底×4。
+  </div>
+</details>
+
+<details class="rules">
+  <summary>赢钱策略（点开）</summary>
+  <div class="guide-grid">
+    <div class="guide-card"><h3>🔴 拿红十：先藏身份，再控节奏</h3><p>红十是单张最大牌，但一旦打出就暴露身份。前期优先整理对子、顺子，尽量用普通牌跟牌；把红十留到关键轮次抢先手或收尾。两张红十在同一人手里时，避免过早把两张一起送出。</p></div>
+    <div class="guide-card"><h3>⚪ 平民方：逼红十暴露</h3><p>留意谁总能稳稳管住单张、谁在关键轮次突然变弱；有三张一样时可以考虑揪牌。明打后队伍清楚，平民要优先压住红十队的接风，别让对方连续拿到主动权。</p></div>
+    <div class="guide-card"><h3>💣 炸弹：赢牌与赢钱要分开算</h3><p>三张、四张、双红十都会增加倍数。炸弹应优先留给“阻止对方走完”或“自己抢回先手”的节点；没有必要时不要为了多一轮而炸，因为每个炸弹都会让输赢金额再翻倍。</p></div>
+    <div class="guide-card"><h3>🧮 牌序与残局：数牌比猜牌更重要</h3><p>整理时把单张、对子、连牌、炸弹分开看；每轮记住 2、A、红十和已出炸弹。残局先计算自己能否一轮走完，再决定是否管牌。红十名次直接决定 1 打 3 和 2 打 2 的输赢。</p></div>
+  </div>
+  <div class="strategy-note"><b>资金策略：</b>本页面的金额是“底 × 2<sup>明打/炸弹次数</sup>”，倍数会很快放大。建议开局前先约定底注上限、是否接受投降，以及出现四个十时是否按本页的“底×4”结算。策略只能提高决策质量，不能保证赢钱。</div>
+</details>
+
+<div id="toast"></div>
+<button id="abortBtn" class="warn" style="display:none;position:fixed;right:14px;bottom:14px;z-index:50"
+        onclick="if(confirm('确定立即结束当前牌局并回到大厅吗？（本局不计输赢）'))api('/api/abort',{pid:pid}).then(poll)">⚠️ 结束当前牌局</button>
+
+<script>
+let pid = localStorage.getItem("hs_pid") || "";
+let S = null;
+let sel = new Set();
+let lastRound = -1;
+let savingBase = false;
+let handOrder = [];
+let handOrderKey = "";
+let reorderMode = false;
+let reorderPick = null;
+let draggedIndex = null;
+
+const SUIT = { S:"♠", H:"♥", C:"♣", D:"♦", X:"🃏" };
+const RED10 = ["H10","D10"];
+
+function toast(t){
+  const el = document.getElementById("toast");
+  el.textContent = t; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove("show"), 1800);
+}
+async function api(path, body){
+  try{
+    const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})});
+    const j = await r.json();
+    if(j.error) toast(j.error);
+    return j;
+  }catch(e){ toast("网络出错"); return {error:"net"}; }
+}
+async function join(){
+  const nm = document.getElementById("nameInput").value.trim();
+  if(!nm) return toast("先输入名字");
+  const bid = localStorage.getItem("hs_bid") || (Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+  localStorage.setItem("hs_bid", bid);
+  const r = await api("/api/join",{name:nm, bid:bid});
+  if(r.pid){ pid = r.pid; localStorage.setItem("hs_pid", pid); sel.clear(); await poll(); }
+}
+function declare(action){ api("/api/declare",{pid:pid, action:action}).then(poll); }
+function saveBase(){
+  const v = document.getElementById("baseInput").value;
+  savingBase = true;
+  api("/api/base",{pid:pid, base:v}).then(()=>{ savingBase=false; poll(); });
+}
+
+function currentHandKey(){
+  return "hs_hand_order_" + (pid || "guest") + "_" + ((S && S.round_no) || 0);
+}
+function syncHandOrder(hand){
+  const key = currentHandKey();
+  if(handOrderKey !== key){
+    handOrderKey = key;
+    try{ handOrder = JSON.parse(localStorage.getItem(key) || "[]"); }catch(e){ handOrder = []; }
+  }
+  const present = new Set(hand);
+  handOrder = handOrder.filter(c => present.has(c));
+  hand.forEach(c => { if(handOrder.indexOf(c) < 0) handOrder.push(c); });
+  try{ localStorage.setItem(key, JSON.stringify(handOrder)); }catch(e){}
+  if(reorderPick !== null && reorderPick >= handOrder.length) reorderPick = null;
+  return handOrder.slice();
+}
+function saveHandOrder(){
+  try{ localStorage.setItem(handOrderKey, JSON.stringify(handOrder)); }catch(e){}
+}
+function autoSort(){
+  if(!S || !S.hand) return;
+  syncHandOrder(S.hand);
+  handOrder.sort((a,b)=>{
+    const d = singleVal(b) - singleVal(a);
+    return d || a.localeCompare(b);
+  });
+  reorderPick = null;
+  saveHandOrder();
+  render();
+  toast("已按牌力排序");
+}
+function toggleReorder(){
+  reorderMode = !reorderMode;
+  reorderPick = null;
+  updateReorderControls();
+  render();
+}
+function updateReorderControls(){
+  const text = reorderMode ? "✓ 完成理牌" : "↔ 调整牌序";
+  ["dReorderBtn","pReorderBtn"].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.textContent = text;
+  });
+  const hint = document.getElementById("reorderHint");
+  if(hint) hint.textContent = reorderMode ? "　调整模式：拖动，或点两张牌交换位置。" : "";
+}
+function handCardHtml(c, i, pick){
+  const chosen = reorderMode && reorderPick === i ? " reorder-picked" : "";
+  const classes = (pick ? "pick " : "") + "hand-card reorderable" + chosen;
+  return cardHtml(c, classes, true).replace('data-c="'+c+'"', 'data-c="'+c+'" data-hand-index="'+i+'" draggable="true"');
+}
+function renderHand(id, pick){
+  const el = document.getElementById(id);
+  if(!el || !S || !S.hand) return;
+  const cards = syncHandOrder(S.hand);
+  el.innerHTML = cards.map((c,i)=>handCardHtml(c,i,pick)).join("");
+  updateReorderControls();
+}
+
+function cardHtml(code, extra, big){
+  let txt, red = false, cls = "";
+  const s = code[0], r = code.slice(1);
+  red = (s === "H" || s === "D");
+  txt = SUIT[s] + r;
+  if(RED10.indexOf(code) >= 0) cls = " red10";
+  return '<span class="card'+(red?" red":"")+cls+(big?" big":"")+' '+(extra||"")+'" data-c="'+code+'">'+txt+'</span>';
+}
+function moneyHtml(v){
+  if(v > 0) return '<span class="money pos">+'+v+'</span>';
+  if(v < 0) return '<span class="money neg">'+v+'</span>';
+  return '<span class="money" style="color:#999">0</span>';
+}
+
+/* 和服务器一致的牌型判断，用来给出选中提示 */
+const CV = {"2":14,"A":13,"K":12,"Q":11,"J":10,"10":9,"9":8,"8":7,"7":6,"6":5};
+/* 单张专用大小：红十最大(15)，黑十=9（比 J 小）——必须和 server.py single_val 一致 */
+function singleVal(code){
+  if(RED10.indexOf(code)>=0) return 15;
+  return CV[code.slice(1)];
+}
+function comboOf(cards){
+  const n = cards.length; if(!n) return null;
+  const names = cards.map(c=>c.slice(1));
+  const vals  = names.map(x=>CV[x]);
+  if(n===1) return {t:"single",v:singleVal(cards[0]),n:1,label:RED10.indexOf(cards[0])>=0?"单张（红十，最大）":"单张"};
+  if(n===2){
+    if(cards.indexOf("H10")>=0 && cards.indexOf("D10")>=0) return {t:"shuanghong",v:99,n:2,label:"双红十（最大）"};
+    if(names[0]===names[1]) return {t:"pair",v:vals[0],n:2,label:"对子"};
+    return null;
+  }
+  if(new Set(names).size===1 && (n===3||n===4))
+    return {t:n===4?"quad":"triple",v:vals[0],n:n,label:n===4?"四张":"三张"};
+  if(n>=3 && new Set(names).size===n && names.indexOf("2")<0){
+    const v = vals.slice().sort((a,b)=>a-b);
+    let good = true;
+    for(let i=0;i<v.length-1;i++) if(v[i+1]-v[i]!==1) good = false;
+    if(good) return {t:"straight",v:v[v.length-1],n:n,label:"单龙（顺子）"};
+  }
+  if(n>=6 && n%2===0){
+    const grp = {};
+    names.forEach((x,i)=>{ (grp[x]=grp[x]||[]).push(cards[i]); });
+    const ks = Object.keys(grp);
+    if(ks.every(k=>grp[k].length===2) && ks.indexOf("2")<0
+       && !ks.some(k=>k==="10" && grp[k].indexOf("H10")>=0 && grp[k].indexOf("D10")>=0)){
+      const v = ks.map(k=>CV[k]).sort((a,b)=>a-b);
+      let good = true;
+      for(let i=0;i<v.length-1;i++) if(v[i+1]-v[i]!==1) good = false;
+      if(good) return {t:"pairchain",v:v[v.length-1],n:n,label:"双龙（连对）"};
+    }
+  }
+  return null;
+}
+const BOMB_BEATS = {
+  triple:["single","pair","straight"],
+  quad:["single","pair","straight","pairchain","triple"],
+  shuanghong:["single","pair","straight","pairchain","triple","quad"]
+};
+function beats(a,b){
+  if(a.t===b.t){
+    if(a.t==="straight"||a.t==="pairchain") return a.n===b.n && a.v>b.v;
+    if(a.t==="shuanghong") return false;
+    return a.v>b.v;
+  }
+  if(b.t==="shuanghong") return false;
+  return (BOMB_BEATS[a.t]||[]).indexOf(b.t)>=0;
+}
+
+/* ---------------- 渲染 ---------------- */
+function render(){
+  if(!S) return;
+  const ph = S.phase;
+  const joined = !!S.you;
+  const show = (id) => document.getElementById(id).style.display = "block";
+  const hide = (id) => document.getElementById(id).style.display = "none";
+  ["lobby","declare","play","result","waiting"].forEach(hide);
+
+  document.getElementById("roomInfo").textContent =
+    "四人一桌 · 一副牌去掉大小王和 3、4、5（40 张）· 每人 10 张" +
+    (S.round_no ? "　·　已打到第 " + S.round_no + " 局" : "");
+
+  if(ph === "join" || !joined){
+    show("lobby");
+    document.getElementById("abortBtn").style.display = "none";
+    renderLobby();
+    return;
+  }
+  document.getElementById("abortBtn").style.display = (joined && (ph === "declare" || ph === "play")) ? "inline-block" : "none";
+  if(ph === "declare"){ show("declare"); renderDeclare(); return; }
+  if(ph === "play"){ show("play"); renderPlay(); return; }
+  show("result"); renderResult();
+}
+
+function seatHtml(p, big){
+  let tags = "";
+  if(p.red_shown) tags += '<span class="tag red">红十×'+ (p.red_count||1) +' 已亮</span>';
+  if(p.out) tags += '<span class="tag gray">已走完 第'+p.out_order+'</span>';
+  const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.out?" out":"");
+  return '<div class="'+cls+'">'
+    + '<div class="nm">'+p.name+(p.is_me?' <span class="tag gray">你</span>':'')+tags+'</div>'
+    + '<div class="cnt">剩 '+p.count+' 张　累计 '+moneyHtml(p.money)+(p.delta?('　本局 '+moneyHtml(p.delta)):'')+'</div>'
+    + '</div>';
+}
+
+function renderLobby(){
+  document.getElementById("joinBox").style.display = S.you ? "none" : "block";
+  document.getElementById("youLine").textContent = S.you ? "你已加入：可等其他人进来" : "";
+  document.getElementById("lobbyPlayers").innerHTML =
+    S.players.map(p=>seatHtml(p)).join("") || '<div class="hint">还没有人加入</div>';
+  const n = S.players.length;
+  document.getElementById("startBtn").style.display = (S.you && n === 4) ? "inline-block" : "none";
+  document.getElementById("clearBtn").style.display = (S.is_host && n) ? "inline-block" : "none";
+  const cfg = document.getElementById("hostCfg");
+  cfg.style.display = S.is_host ? "block" : "none";
+  if(!savingBase) document.getElementById("baseInput").value = S.base;
+  let tip = "";
+  if(!S.you) tip = "① 输入名字 → ② 点「加入」（加入后才会出现开始按钮）";
+  else if(n < 4) tip = "已加入 " + n + "/4 人，等满 4 人就可以开始";
+  else tip = "人齐了！任何人点「开始游戏」都会给所有人发牌";
+  document.getElementById("joinTip").textContent = tip;
+  document.getElementById("lobbyHint").textContent = S.you ? "" : "";
+}
+
+function renderDeclare(){
+  document.getElementById("dRound").textContent = S.round_no;
+  document.getElementById("dBase").textContent = S.base;
+  document.getElementById("dDeclared").className = "pill" + (S.declared?" on":"");
+  document.getElementById("dDeclared").textContent = S.declared ? "明打（已翻倍）" : "暗打";
+
+  renderHand("dHand", false);
+  document.getElementById("dSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
+
+  const ready = S.players.filter(p=>String(p.choice||"")!=="").length;
+  const cname = {"liang":"已亮红十","jiu":"已揪牌","ok":"不亮"};
+  if(ready < S.players.length)
+    document.getElementById("dSeats").innerHTML = S.players.map(p=>{
+      const extra = p.choice ? ('<div class="hint">'+ (cname[p.choice]||p.choice) +'</div>') : '<div class="hint">待选择…</div>';
+      return seatHtml(p).replace('</div>', extra + '</div>');
+    }).join("");
+  document.getElementById("btnLiang").style.display = (S.can_liang && !S.my_choice) ? "inline-block":"none";
+  document.getElementById("btnJiu").style.display   = (S.can_jiu   && !S.my_choice) ? "inline-block":"none";
+  document.getElementById("btnSur").style.display   = S.can_surrender ? "inline-block":"none";
+  document.getElementById("btnOk").style.display    = !S.my_choice ? "inline-block":"none";
+  let h = S.my_choice ? "你已选择：" + (cname[S.my_choice]||S.my_choice) + "，等其他人…" : "";
+  if(S.declared) h += "　（本局已翻倍）";
+  document.getElementById("dHint").textContent = h + "　" + ready + "/" + S.players.length + " 已选择";
+}
+
+function renderPlay(){
+  document.getElementById("pRound").textContent = S.round_no;
+  document.getElementById("pBase").textContent = S.base;
+  const de = document.getElementById("pDeclared");
+  de.className = "pill" + (S.declared?" on":"");
+  de.textContent = S.declared ? "明打 已翻倍" : "暗打";
+  const bb = document.getElementById("pBombs");
+  bb.className = "pill" + (S.bombs?" on":"");
+  bb.textContent = "炸弹 " + S.bombs + " 个";
+  document.getElementById("pTurn").textContent = S.turn_name ? ("轮到 " + S.turn_name) : "";
+
+  document.getElementById("pSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
+
+  const lp = document.getElementById("lastPlay");
+  lp.innerHTML = S.last_play
+    ? '<div class="trickline"><b>'+S.last_play.name+'</b> 出 '+S.last_play.type+'：'+S.last_play.cards.map(c=>cardHtml(c,"sm")).join("")+'</div>'
+    : '<div class="hint">新的一轮，等待 <b>'+(S.turn_name||"轮到的玩家")+'</b> 先出</div>';
+  document.getElementById("jiefengLine").textContent = S.jiefeng
+    ? ("🔁 " + S.jiefeng.by + " 出完了" + (S.jiefeng.kind === "mate" ? "，队友 " : "，下家 ") + S.jiefeng.to + " 接风先出")
+    : "";
+  document.getElementById("trickList").innerHTML = S.trick.length
+    ? S.trick.map(t=>'<div class="trickline">'+t.name+'：'+(t.pass?'<span style="color:#999">不要</span>':t.type+' '+t.cards.map(c=>cardHtml(c,"sm")).join(""))+'</div>').join("")
+    : "";
+
+  renderHand("pHand", true);
+  document.querySelectorAll("#pHand .hand-card").forEach(el=>{
+    const c = el.getAttribute("data-c");
+    if(sel.has(c) && !reorderMode) el.classList.add("sel");
+  });
+
+  // 选中提示
+  const arr = Array.from(sel);
+  let info = "";
+  if(arr.length){
+    const cb = comboOf(arr);
+    info = cb ? ("已选：" + cb.label) : "已选：" + arr.length + " 张 —— 牌型不合法";
+    if(cb && S.last_play){
+      const lc = comboOf(S.last_play.cards);
+      info += beats(cb, lc) ? "　✔ 能管上" : "　✘ 管不上";
+    }
+  }
+  document.getElementById("selInfo").textContent = info;
+
+  const my = S.is_turn;
+  document.getElementById("btnPlay").disabled = !my;
+  document.getElementById("btnPass").disabled = !my || S.must_play;
+  document.getElementById("btnPass").textContent = (my && S.must_play) ? "你先出（必须出牌）" : "不要";
+}
+
+function renderResult(){
+  const r = S.result; if(!r) return;
+  document.getElementById("rText").textContent = r.text;
+  const names = r.names;
+  const roleOf = p => r.red.indexOf(p)>=0 ? "红十" : "平民";
+  document.getElementById("rMult").textContent =
+    "每人金额：" + r.mult + "　·　红十持有者：" + r.red.map(p=>names[p]+(r.revealed.indexOf(p)>=0?"(已亮)":"")).join("、");
+  document.getElementById("rRoles").innerHTML =
+    '<span class="pill">红十方：'+r.red.map(p=>names[p]).join("、")+'</span> '+
+    '<span class="pill">平民方：'+r.civil.map(p=>names[p]).join("、")+'</span>';
+
+  let html = "<tr><th>玩家</th><th>身份</th><th>本局</th><th>累计</th></tr>";
+  S.players.forEach(p=>{
+    html += "<tr><td class='l'>"+p.name+(p.is_me?"（你）":"")+"</td><td>"+roleOf(p.pid)+"</td><td>"+moneyHtml(p.delta)+"</td><td>"+moneyHtml(p.money)+"</td></tr>";
+  });
+  document.getElementById("rTable").innerHTML = html;
+
+  document.getElementById("rTransfer").innerHTML = r.transfers.length
+    ? "💸 转账清单：" + r.transfers.map(t=>names[t["from"]]+" → "+names[t["to"]]+" <b>"+t.amount+" 元</b>").join("　")
+    : "本局平局，不用给钱。";
+  document.getElementById("rOrder").textContent = r.out_order.length
+    ? "出完顺序：" + r.out_order.join(" → ") : "";
+  document.getElementById("btnResetMoney").style.display = S.is_host ? "inline-block" : "none";
+}
+
+/* ---------------- 轮询 ---------------- */
+async function poll(){
+  const myPid = pid;
+  try{
+    const r = await fetch("/api/state?pid=" + encodeURIComponent(myPid), {cache:"no-store"});
+    const st = await r.json();
+    if(myPid !== pid) return;                       // 丢弃过期响应
+    if(st.you === null && pid){ pid = ""; localStorage.removeItem("hs_pid"); }
+    if(st.round_no !== lastRound){ lastRound = st.round_no; sel.clear(); handOrderKey = ""; reorderPick = null; reorderMode = false; }
+    S = st; render();
+  }catch(e){}
+}
+
+/* 点牌选/取消；调整模式下两次点牌也可以交换位置 */
+document.addEventListener("click", function(e){
+  const el = e.target.closest(".hand-card");
+  if(!el) return;
+  const c = el.getAttribute("data-c");
+  const index = Number(el.getAttribute("data-hand-index"));
+  if(reorderMode){
+    if(reorderPick === null){
+      reorderPick = index;
+      render();
+      toast("已选第 1 张，再点一张交换");
+    }else if(reorderPick !== index){
+      const other = handOrder[index];
+      handOrder[index] = handOrder[reorderPick];
+      handOrder[reorderPick] = other;
+      reorderPick = null;
+      saveHandOrder();
+      render();
+      toast("已交换位置");
+    }else{
+      reorderPick = null;
+      render();
+    }
+    return;
+  }
+  if(!el.classList.contains("pick")) return;
+  if(sel.has(c)) sel.delete(c); else {
+    if(sel.size >= 9) return toast("一次最多出 9 张");
+    sel.add(c);
+  }
+  renderPlay();
+});
+
+document.addEventListener("dragstart", function(e){
+  const el = e.target.closest(".hand-card");
+  if(!el) return;
+  draggedIndex = Number(el.getAttribute("data-hand-index"));
+  el.classList.add("dragging");
+  if(e.dataTransfer){ e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(draggedIndex)); }
+});
+document.addEventListener("dragover", function(e){
+  const el = e.target.closest(".hand-card");
+  if(!el) return;
+  e.preventDefault();
+  document.querySelectorAll(".drop-target").forEach(x=>x.classList.remove("drop-target"));
+  if(Number(el.getAttribute("data-hand-index")) !== draggedIndex) el.classList.add("drop-target");
+});
+document.addEventListener("drop", function(e){
+  const el = e.target.closest(".hand-card");
+  if(!el || draggedIndex === null) return;
+  e.preventDefault();
+  const targetIndex = Number(el.getAttribute("data-hand-index"));
+  if(targetIndex !== draggedIndex){
+    const moving = handOrder.splice(draggedIndex, 1)[0];
+    handOrder.splice(targetIndex, 0, moving);
+    saveHandOrder();
+    render();
+    toast("已调整牌序");
+  }
+  draggedIndex = null;
+});
+document.addEventListener("dragend", function(e){
+  document.querySelectorAll(".dragging,.drop-target").forEach(x=>x.classList.remove("dragging","drop-target"));
+  draggedIndex = null;
+});
+
+async function doPlay(){
+  const arr = Array.from(sel);
+  if(!arr.length) return toast("先点牌选中");
+  const r = await api("/api/play",{pid:pid, cards:arr});
+  if(!r.error){ sel.clear(); await poll(); }
+}
+async function doPass(){
+  const r = await api("/api/pass",{pid:pid});
+  if(!r.error) await poll();
+}
+
+document.getElementById("nameInput").addEventListener("keydown", e=>{ if(e.key==="Enter") join(); });
+
+poll();
+setInterval(poll, 1000);
+</script>
+</body>
+</html>

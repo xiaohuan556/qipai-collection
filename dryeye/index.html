@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>干瞪眼 iOS 商业落地</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; }
+body { font-family:"Microsoft YaHei",system-ui,sans-serif; background:radial-gradient(ellipse at 50% 30%,#314f7b 0%,#172744 70%,#0c1528 100%); color:#fff; overflow-x:hidden; }
+#app { max-width:980px; margin:0 auto; padding:10px 12px 24px; min-height:100%; display:flex; flex-direction:column; }
+.topbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:6px 0; }
+.topbar h1 { font-size:20px; letter-spacing:2px; text-shadow:0 2px 4px rgba(0,0,0,.5); }
+.badge { background:rgba(0,0,0,.35); border-radius:14px; padding:3px 10px; font-size:12px; }
+.spacer { flex:1; }
+button { font-family:inherit; cursor:pointer; border:none; border-radius:10px; padding:9px 20px; font-size:15px; font-weight:bold; transition:.15s; }
+button:active { transform:scale(.96); }
+.btn-gold { background:linear-gradient(180deg,#ffd76a,#f0a827); color:#5a3400; box-shadow:0 3px 0 #b97c10; }
+.btn-red { background:linear-gradient(180deg,#ff7a6a,#e04b38); color:#fff; box-shadow:0 3px 0 #a33022; }
+.btn-ghost { background:rgba(255,255,255,.16); color:#fff; box-shadow:0 3px 0 rgba(0,0,0,.25); }
+button:disabled { opacity:.38; cursor:not-allowed; transform:none; box-shadow:none; }
+.seats { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:8px 0; }
+.seat { background:rgba(0,0,0,.32); border:2px solid transparent; border-radius:12px; padding:7px 12px; min-width:96px; text-align:center; position:relative; }
+.seat.turn { border-color:#ffd76a; box-shadow:0 0 14px rgba(255,215,106,.65); animation:pulse 1s infinite; }
+@keyframes pulse { 50% { box-shadow:0 0 22px rgba(255,215,106,.95); } }
+.seat .nm { font-size:14px; font-weight:bold; white-space:nowrap; max-width:120px; overflow:hidden; text-overflow:ellipsis; }
+.seat .ct { font-size:12px; opacity:.85; margin-top:2px; }
+.seat .sc { font-size:11px; color:#ffd76a; margin-top:1px; }
+.seat .crown { position:absolute; top:-11px; left:50%; transform:translateX(-50%); font-size:14px; }
+.seat .offline { opacity:.45; }
+.trick { min-height:118px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:6px 0; }
+.trick-label { font-size:13px; color:#ffe9b0; }
+.trick-cards { display:flex; }
+.trick-cards .card { margin-left:-26px; animation:pop .18s ease-out; }
+.trick-cards .card:first-child { margin-left:0; }
+@keyframes pop { from { transform:translateY(14px) scale(.7); opacity:0; } }
+.msg { text-align:center; min-height:22px; font-size:14px; color:#ffe9b0; }
+.err { color:#ff9c8f; }
+.hand-wrap { margin-top:auto; }
+.hand { display:flex; justify-content:center; padding:18px 4px 8px; flex-wrap:wrap; }
+.card { width:58px; height:84px; background:#fff; border-radius:8px; box-shadow:0 3px 7px rgba(0,0,0,.45); position:relative; cursor:pointer; flex-shrink:0; user-select:none; touch-action:manipulation; transition:transform .12s; }
+.hand .card { margin-left:-14px; }
+.hand .card:first-child { margin-left:0; }
+.hand .card.sel { transform:translateY(-16px); box-shadow:0 0 0 3px #ffd76a,0 6px 12px rgba(0,0,0,.5); }
+.card .rk { position:absolute; top:4px; left:6px; font-size:18px; font-weight:900; line-height:1; }
+.card .st { position:absolute; top:24px; left:6px; font-size:14px; }
+.card .big { position:absolute; bottom:6px; right:7px; font-size:30px; font-weight:900; opacity:.9; }
+.card.red { color:#d81e06; }
+.card.blk { color:#1a1a1a; }
+.card.joker { background:linear-gradient(160deg,#fff,#ffe9ef); }
+.card.joker .rk { font-size:15px; }
+.actions { display:flex; gap:12px; justify-content:center; padding:8px 0 4px; }
+.log { background:rgba(0,0,0,.28); border-radius:10px; padding:8px 12px; font-size:12px; line-height:1.7; max-height:130px; overflow-y:auto; margin-top:8px; }
+.log div { opacity:.92; }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.62); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+.panel { background:linear-gradient(180deg,#173f2c,#0e2b1d); border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:22px; max-width:520px; width:100%; max-height:92vh; overflow-y:auto; box-shadow:0 12px 40px rgba(0,0,0,.6); }
+.panel h2 { text-align:center; margin-bottom:14px; letter-spacing:3px; }
+.row { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin:8px 0; }
+input[type=text],input[type=number] { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.3); border-radius:8px; color:#fff; padding:10px 12px; font-size:15px; width:180px; text-align:center; }
+input::placeholder { color:rgba(255,255,255,.5); }
+.plist { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0; }
+.chip { background:rgba(255,255,255,.12); border-radius:16px; padding:5px 12px; font-size:13px; }
+table.res { width:100%; border-collapse:collapse; margin:10px 0; font-size:14px; }
+table.res th,table.res td { padding:7px 6px; text-align:center; border-bottom:1px solid rgba(255,255,255,.12); }
+table.res .win td { color:#ffd76a; font-weight:bold; }
+table.res .lose td { color:#ff9c8f; }
+details { background:rgba(0,0,0,.25); border-radius:10px; padding:10px 14px; margin-top:10px; font-size:13px; line-height:1.8; }
+details summary { cursor:pointer; font-weight:bold; color:#ffe9b0; }
+.toast { position:fixed; top:14%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.8); border:1px solid rgba(255,255,255,.25); padding:10px 22px; border-radius:12px; font-size:15px; z-index:99; animation:pop .2s; }
+.host-tools { display:flex; gap:8px; }
+@media (max-width:600px){ .card { width:50px; height:72px; } .hand .card { margin-left:-18px; } .card .rk{font-size:15px;} .card .big{font-size:24px;} }
+
+/* 统一为合集的浅色测试 UI：与红十端测试版、扑克方案推演保持同一视觉语言 */
+body { background:#fff; color:#202a36; overflow-x:hidden; }
+#app { max-width:1040px; padding:14px 14px 28px; }
+.topbar { padding:0 0 14px; border-bottom:1px solid #dce4ec; }
+.topbar h1 { color:#14263c; text-shadow:none; letter-spacing:1px; }
+.badge { background:#eef2f6; color:#58697b; border:1px solid #d8e0e8; border-radius:999px; }
+button { border-radius:9px; border:1px solid transparent; }
+.btn-gold { background:#9a7431; color:#fff; box-shadow:none; }
+.btn-red { background:#b44d43; color:#fff; box-shadow:none; }
+.btn-ghost { background:#edf1f5; color:#34475b; border-color:#d8e0e8; box-shadow:none; }
+.btn-gold:hover, .btn-red:hover, .btn-ghost:hover { filter:brightness(.97); }
+.seats { padding:16px 0 10px; }
+.seat { background:#fff; border:1px solid #e2e3e7; border-radius:10px; color:#34475b; box-shadow:none; }
+.seat.turn { border-color:#c39a4b; box-shadow:0 0 0 2px rgba(195,154,75,.16); animation:none; }
+.seat .sc { color:#9a7431; }
+.trick { background:#fff; border:1px dashed #d5dee8; border-radius:12px; }
+.trick-label, .msg { color:#5f7082; }
+.hand { background:#fff; border:0; border-radius:12px; margin-top:12px; }
+.hand .card.sel { box-shadow:0 0 0 3px #c39a4b,0 6px 12px rgba(48,64,80,.18); }
+.log { background:#fff; border:1px solid #dce4ec; color:#526579; }
+.overlay { background:rgba(38,54,72,.32); }
+.panel { background:#fff; border:1px solid #e2e3e7; color:#263648; border-radius:12px; box-shadow:0 7px 22px rgba(30,49,72,.06); }
+.panel h2 { color:#263648; }
+input[type=text], input[type=number] { background:#fff; border:1px solid #c9d4df; color:#263648; }
+input::placeholder { color:#94a1af; }
+.chip { background:#f0f4f8; color:#526579; border:1px solid #dce4ec; }
+table.res th, table.res td { border-bottom-color:#e4e9ef; }
+table.res th { color:#526579; background:#f0f4f8; }
+table.res .win td { color:#9a7431; }
+details { background:#f7f9fb; border:1px solid #dce4ec; color:#526579; }
+details summary { color:#34475b; }
+.toast { background:#fff; color:#263648; border-color:#d8e0e8; box-shadow:0 8px 24px rgba(40,58,78,.16); }
+.err { color:#b44d43; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var pid = localStorage.gy_pid || null;
+var bid = localStorage.gy_bid || (localStorage.gy_bid = Math.random().toString(36).slice(2, 12));
+var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null;
+var lastViewKey = '', homeMode = false;
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function toast(msg, isErr){
+  var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  if (isErr) t.style.color = '#ff9c8f';
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 1800);
+}
+function api(path, body, cb){
+  fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {}) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ cb && cb(j); })
+    .catch(function(){});
+}
+function playErr(j){ if (j && j.err) toast(j.err, true); }
+
+function cardHtml(c, extra){
+  if (c.rank >= 16){
+    var big = c.rank === 17;
+    return '<div class="card joker ' + (extra||'') + '" data-id="' + c.id + '" role="button" tabindex="0" onclick="toggleCard(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleCard(this)}">' +
+      '<div class="rk" style="color:' + (big ? '#d81e06' : '#1a51c4') + '">' + (big ? '大王' : '小王') + '</div>' +
+      '<div class="big" style="color:' + (big ? '#d81e06' : '#1a51c4') + '">王</div></div>';
+  }
+  var red = (c.suit === '♥' || c.suit === '♦');
+  var rname = ({11:'J',12:'Q',13:'K',14:'A',15:'2'})[c.rank] || c.rank;
+  return '<div class="card ' + (red ? 'red' : 'blk') + ' ' + (extra||'') + '" data-id="' + c.id + '" role="button" tabindex="0" onclick="toggleCard(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleCard(this)}">' +
+    '<div class="rk">' + rname + '</div><div class="st">' + c.suit + '</div>' +
+    '<div class="big">' + c.suit + '</div></div>';
+}
+
+function toggleCard(c){
+  if (!S || !S.you || !S.you.is_turn) return;
+  var id = c.getAttribute('data-id');
+  if (sel[id]){ delete sel[id]; selN--; c.classList.remove('sel'); }
+  else { sel[id] = 1; selN++; c.classList.add('sel'); }
+  var playBtn = document.querySelector('.actions .btn-gold');
+  if (playBtn) playBtn.disabled = !selN;
+}
+
+function render(){
+  var app = document.getElementById('app');
+  var oldNameInput = document.getElementById('nm');
+  var draftName = oldNameInput ? oldNameInput.value : '';
+  var nameWasFocused = !!(oldNameInput && document.activeElement === oldNameInput);
+  if (!S){ app.innerHTML = '<div style="text-align:center;padding-top:40vh">连接中…</div>'; return; }
+  var viewKey = (homeMode ? 'home:' : 'game:') + JSON.stringify(S);
+  if (viewKey === lastViewKey && app.children.length) return;
+  lastViewKey = viewKey;
+  var h = '';
+  if (homeMode){ h = homeView(); }
+  else if (S.phase === 'lobby'){ h = lobbyView(); }
+  else { h = gameView(); }
+  app.innerHTML = h;
+  var newNameInput = document.getElementById('nm');
+  if (newNameInput && draftName) {
+    newNameInput.value = draftName;
+    if (nameWasFocused) {
+      newNameInput.focus();
+      newNameInput.setSelectionRange(draftName.length, draftName.length);
+    }
+  }
+}
+
+function homeView(){
+  var canJoin = S.phase === 'lobby';
+  var note = canJoin ? '可以重新加入当前测试桌。' : '当前牌局还在进行中，结束后即可重新加入。';
+  return '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1><span class="badge">主页面</span><div class="spacer"></div></div>' +
+    '<div class="panel" style="max-width:420px;margin:12vh auto 0">' +
+    '<h2>返回主页面</h2><div class="msg">' + note + '</div>' +
+    '<div class="row"><input type="text" id="nm" placeholder="输入昵称" maxlength="12" autocomplete="nickname" onkeydown="if(event.key===\'Enter\')doJoin()"></div>' +
+    '<div class="row"><button class="btn-gold" ' + (canJoin ? '' : 'disabled') + ' onclick="doJoin()">重新加入</button>' +
+    '<button class="btn-ghost" onclick="doResume()">返回牌局</button></div></div>' + rulesHtml();
+}
+
+function lobbyView(){
+  var lobbyActions = pidInList() ? '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="doRestart()">重新开始</button>' +
+    '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doExitHome()">退出主页面</button>' : '';
+  var h = '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1><span class="badge">测试桌 · 底分 ¥' + S.base + '</span><div class="spacer"></div>' + lobbyActions + '</div>';
+  if (!S.you && !pidInList()){
+    h += '<div class="panel" style="max-width:380px;margin:12vh auto 0">' +
+      '<h2>加入测试桌</h2>' +
+      '<div class="row"><input type="text" id="nm" placeholder="输入昵称" maxlength="12" autocomplete="nickname" autofocus onkeydown="if(event.key===\'Enter\')doJoin()"></div>' +
+      '<div class="row"><button class="btn-gold" onclick="doJoin()">加入游戏</button></div>' +
+      '<div style="text-align:center;font-size:12px;opacity:.7;margin-top:8px">2–10 人同玩 · 同一 WiFi 手机也可加入</div></div>';
+  } else {
+    var youName = '';
+    (S.players||[]).forEach(function(p){ if (p.pid === pid) youName = p.name; });
+    h += '<div class="seats">';
+    (S.players||[]).forEach(function(p){
+      h += '<div class="seat"><div class="nm">' + esc(p.name) + (p.is_bot ? ' 🤖' : '') + (p.pid===pid?' (你)':'') + '</div>' +
+        '<div class="sc">累计 ¥' + p.score + '</div></div>';
+    });
+    h += '</div>';
+    if (S.is_host){
+      h += '<div class="panel" style="max-width:460px;margin:20px auto 0">' +
+        '<h2>等待开始</h2>' +
+        '<div class="row"><span>底分</span><input type="number" id="bs" value="' + S.base + '" min="1" max="1000" style="width:90px">' +
+        '<button class="btn-ghost" onclick="doBase()">设置</button></div>' +
+        '<div class="row"><button class="btn-ghost" onclick="doAddBot()">+ 电脑玩家</button>' +
+        '<button class="btn-ghost" onclick="doDelBot()">- 电脑玩家</button></div>' +
+        '<div class="row"><button class="btn-gold" style="font-size:18px;padding:12px 40px" onclick="doStart()">开始游戏</button></div>' +
+        '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">清空房间重新开始</button></div></div>';
+    } else {
+      h += '<div class="msg" style="margin-top:30px">等待庄家开始游戏…（至少 2 名玩家）</div>';
+    }
+  }
+  h += rulesHtml();
+  return h;
+}
+
+function gameView(){
+  var h = '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1>' +
+    '<span class="badge">第 ' + S.round + ' 局</span>' +
+    '<span class="badge">底分 ¥' + S.base + '</span>' +
+    '<span class="badge">牌堆 ' + S.deck + ' 张</span>' +
+    (S.bombs ? '<span class="badge">炸弹×' + S.bombs + '（已翻倍）</span>' : '') +
+    '<div class="spacer"></div>' +
+    '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="doRestart()">重新开始</button>' +
+    '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doExitHome()">退出主页面</button>' +
+    (S.you ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">结束当前牌局</button>' :
+      (S.phase !== 'lobby' ? '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doAbort()">恢复牌桌</button>' : '')) +
+    '</div>';
+  h += '<div class="seats">';
+  (S.players||[]).forEach(function(p){
+    h += '<div class="seat ' + (p.turn ? 'turn' : '') + ' ' + (p.online ? '' : 'offline') + '">' +
+      (p.dealer ? '<div class="crown">👑</div>' : '') +
+      '<div class="nm">' + esc(p.name) + (p.is_bot ? ' 🤖' : '') + '</div>' +
+      '<div class="ct">' + (p.pid === pid ? '你 · ' : '') + p.count + ' 张</div>' +
+      '<div class="sc">¥' + p.score + '</div></div>';
+  });
+  h += '</div>';
+  // 桌面出的牌
+  h += '<div class="trick">';
+  if (S.last){
+    h += '<div class="trick-label">' + esc(S.last.name) + ' 出了：' + esc(S.last.combo) + '</div><div class="trick-cards">';
+    S.last.cards.forEach(function(c){ h += cardHtml(c); });
+    h += '</div>';
+  } else if (S.phase === 'play'){
+    h += '<div class="trick-label">' + (S.you && S.you.is_turn ? '轮到你先出牌' : '等待首出…') + '</div>';
+  }
+  h += '</div>';
+  // 结果结算
+  if (S.phase === 'results' && S.results){ h += resultsHtml(); }
+  // 我的手牌
+  if (S.you){
+    var y = S.you;
+    var hint = '';
+    if (y.is_turn && S.last && y.must_play) hint = '<span class="err">必须管上（能管必须管）</span>';
+    else if (y.is_turn && S.last) hint = '管不上可以过';
+    else if (y.is_turn && y.can_skip) hint = '<span class="err">只剩王牌无法出牌</span>';
+    else if (y.is_turn) hint = '轮到你，任意出牌';
+    else {
+      var turnName = '';
+      (S.players || []).forEach(function(p){ if (p.turn) turnName = p.name; });
+      hint = turnName ? '等待「' + esc(turnName) + '」出牌…' : '等待其他玩家出牌…';
+    }
+    h += '<div class="hand-wrap"><div class="msg" id="hint">' + hint + '</div>' +
+      '<div class="hand" id="hand">';
+    y.hand.forEach(function(c){
+      h += cardHtml(c, sel[c.id] ? 'sel' : '');
+    });
+    h += '</div><div class="actions">';
+    if (y.is_turn){
+      h += '<button class="btn-gold" ' + (selN ? '' : 'disabled') + ' onclick="doPlay()">出牌</button>';
+      if (y.can_pass) h += '<button class="btn-red" onclick="doPass()">要不起 · 过</button>';
+      if (y.can_skip) h += '<button class="btn-red" onclick="doSkip()">摸牌跳过</button>';
+    }
+    h += '</div></div>';
+  } else {
+    h += '<div class="msg" style="margin:20px">本局进行中，你将参加下一局</div>';
+  }
+  h += '<div class="log">';
+  (S.log||[]).forEach(function(l){ h += '<div>' + esc(l) + '</div>'; });
+  h += '</div>';
+  h += rulesHtml();
+  return h;
+}
+
+function resultsHtml(){
+  var r = S.results;
+  var h = '<div class="overlay"><div class="panel">' +
+    '<h2>🎉 第 ' + r.round + ' 局结束</h2>' +
+    '<div style="text-align:center;margin-bottom:6px">赢家：<b style="color:#ffd76a">' + esc(r.winner) + '</b>' +
+    (r.bombs ? ' · 本局炸弹 ' + r.bombs + ' 个（底分翻倍×' + (1 << r.bombs) + '）' : '') + '</div>' +
+    '<table class="res"><tr><th>玩家</th><th>剩牌</th><th>剩王</th><th>倍数</th><th>输/赢</th><th>累计</th></tr>';
+  r.rows.forEach(function(row){
+    var p = null; (S.players||[]).forEach(function(pp){ if (pp.pid === row.pid) p = pp; });
+    var sc = p ? p.score : '';
+    if (row.win) h += '<tr class="win"><td>' + esc(row.name) + '</td><td>🏆</td><td>-</td><td>-</td><td>赢</td><td>¥' + sc + '</td></tr>';
+    else h += '<tr class="lose"><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>×' + row.mult + '</td><td>-¥' + row.pay + '</td><td>¥' + sc + '</td></tr>';
+  });
+  h += '</table><div style="font-size:12px;opacity:.75;text-align:center">结算：剩余张数 × 底分 × 2（输牌翻倍）× 每张剩王再翻倍 × 每个炸弹再翻倍</div>';
+  if (S.is_host){
+    h += '<div class="row" style="margin-top:14px"><button class="btn-gold" style="font-size:17px;padding:11px 36px" onclick="doNext()">下一局（赢家坐庄）</button></div>' +
+      '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">结束并清空房间</button></div>';
+  } else {
+    h += '<div class="msg" style="margin-top:10px">等待庄家开下一局…（赢家坐庄）</div>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
+function rulesHtml(){
+  return '<details><summary>📖 游戏规则 & 算钱方法</summary>' +
+    '<b>出牌顺序：</b>3&lt;4&lt;5&lt;6&lt;7&lt;8&lt;9&lt;10&lt;J&lt;Q&lt;K&lt;A&lt;2。庄家 6 张先出，其余每人 5 张。<br>' +
+    '<b>单牌：</b>只能出比上家大 1 点的单牌；<b>2 可以管任何单牌</b>（3 不能管 2）。<br>' +
+    '<b>对牌：</b>只能出大 1 点的对牌（对 2 只有炸弹能管）。<br>' +
+    '<b>连对：</b>如上家 3344，下家必须出 4455。<br>' +
+    '<b>三张：</b>必须大 1 点；三张 2 最大，可接任何三张。<br>' +
+    '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；如上家 345，下家出 456 或更大。<br>' +
+    '<b>炸弹：</b>四张同点，管任何牌；上家 4 个 3，你得 4 个 4 或更大。<br>' +
+    '<b>王牌：</b>只能代替任意牌搭着出，不能单独出；手里只剩一张王时必须摸牌跳过。<br>' +
+    '<b>能管必须管：</b>手里有能管上的牌不许过。<br>' +
+    '<b>没人要 → 摸牌：</b>你出的牌没人接住，你从牌堆摸一张，然后继续先出。<br>' +
+    '<b>谁先出完谁赢。</b>赢家下一局坐庄（庄家 6 张）。<br>' +
+    '<b>算钱：</b>每个输家 = 剩余张数 × 底分 × 2；手里每剩一张王再翻倍；本局每打出一个炸弹，全场底分再翻倍。</details>';
+}
+
+function pidInList(){
+  var ok = false; (S.players||[]).forEach(function(p){ if (p.pid === pid) ok = true; });
+  return ok;
+}
+
+// ---------- 动作 ----------
+function doJoin(){
+  var nm = document.getElementById('nm').value.trim();
+  if (!nm){ toast('先填个昵称', true); return; }
+  api('/api/join', { name: nm, bid: bid }, function(j){
+    if (j.err){ toast(j.err, true); return; }
+    pid = j.pid; localStorage.gy_pid = pid; homeMode = false; lastViewKey = ''; poll();
+  });
+}
+function doStart(){ api('/api/start', { pid: pid }, playErr); }
+function doNext(){ api('/api/next', { pid: pid }, playErr); }
+function doAddBot(){ api('/api/addbot', { pid: pid }, playErr); }
+function doDelBot(){ api('/api/delbot', { pid: pid }, playErr); }
+function doAbort(){ if (confirm('确定立即结束当前牌局并回到大厅吗？本局不计输赢')) api('/api/abort', { pid: pid || '' }, function(j){ if (j && j.err) toast(j.err, true); else { homeMode = false; lastViewKey = ''; poll(); } }); }
+function doRestart(){
+  if (confirm('重新开始会退出当前牌局并回到主页面，其他玩家的牌局不会被结束。')) doExitHome();
+}
+function doExitHome(){
+  sel = {}; selN = 0;
+  pid = null;
+  localStorage.removeItem('gy_pid');
+  homeMode = true;
+  lastViewKey = '';
+  render();
+}
+function doResume(){ homeMode = false; lastViewKey = ''; render(); }
+function doClear(){ if (confirm('清空房间（含积分）？')) { pid = null; localStorage.removeItem('gy_pid'); api('/api/clear', { pid: S && pidInList() ? pidOfHost() : (S&&S.players&&S.players[0]?S.players[0].pid:'') }, function(){ poll(); }); } }
+function doBase(){
+  var v = parseInt(document.getElementById('bs').value, 10);
+  if (!v || v < 1){ toast('底分至少 1', true); return; }
+  api('/api/base', { pid: pid, value: v }, playErr);
+}
+function pidOfHost(){ return S && S.players && S.players[0] ? S.players[0].pid : ''; }
+
+function doPlay(){
+  var ids = Object.keys(sel);
+  if (!ids.length) return;
+  api('/api/play', { pid: pid, cards: ids }, function(j){
+    if (j.err){ toast(j.err, true); return; }
+    sel = {}; selN = 0; poll();
+  });
+}
+function doPass(){ api('/api/pass', { pid: pid }, function(j){ if (j.err) toast(j.err, true); else poll(); }); }
+function doSkip(){ api('/api/skip', { pid: pid }, function(j){ if (j.err) toast(j.err, true); else poll(); }); }
+
+// ---------- 轮询 ----------
+function poll(){
+  fetch('/api/state?pid=' + encodeURIComponent(pid || ''))
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      var first = !S;
+      S = j;
+      if (j.deal_id !== lastDeal){ sel = {}; selN = 0; lastDeal = j.deal_id; }
+      if (pid && !pidInList() && j.phase !== 'lobby'){ /* 观战 */ }
+      render();
+    })
+    .catch(function(){});
+}
+setInterval(poll, 1000);
+poll();
+</script>
+</body>
+</html>
