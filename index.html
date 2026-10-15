@@ -8,14 +8,29 @@
 :root{--bg:#eef2f7;--panel:#fff;--ink:#18263a;--sub:#6d7a8d;--line:#d7e0ea;--blue:#244b73;--gold:#b47b20;--red:#b94b4b}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#edf2f8,#f8f9fb);color:var(--ink);font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}header{max-width:1180px;margin:auto;padding:24px 22px 14px;display:flex;align-items:end;justify-content:space-between;gap:20px}h1{font-size:24px;margin:0;letter-spacing:.04em}.sub{color:var(--sub);font-size:13px;margin-top:2px}.status{color:var(--sub);font-size:12px;text-align:right}.nav{max-width:1180px;margin:0 auto 12px;padding:0 22px;display:flex;gap:8px;flex-wrap:wrap}.nav button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer;font:inherit;box-shadow:0 3px 10px #243a5b0d}.nav button.active{background:var(--blue);border-color:var(--blue);color:#fff}.nav button span{display:block;font-size:11px;opacity:.7}.stage{max-width:1180px;margin:0 auto;padding:0 22px 30px}.frame{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 12px 32px #243a5b14;min-height:720px}.frame iframe{display:block;width:100%;height:760px;border:0;background:#fff}.hint{max-width:1180px;margin:0 auto;padding:0 22px 18px;color:var(--sub);font-size:12px}@media(max-width:700px){header{display:block;padding:18px 14px 10px}.status{text-align:left;margin-top:6px}.nav,.stage{padding-left:12px;padding-right:12px}.frame iframe{height:820px}}
 .frame iframe[hidden]{display:none}
+@media(max-width:700px){
+  :root{--mobile-deep:#071510;--mobile-ink:#eaf3ed;--mobile-gold:#d7b873}
+  html,body{height:100%;overflow:hidden}
+  body{background:radial-gradient(circle at 50% -10%,#1c4938 0,#0b2118 42%,var(--mobile-deep) 100%);color:var(--mobile-ink)}
+  header{display:none!important}
+  .stage{height:calc(100dvh - 64px - env(safe-area-inset-bottom));padding:0;margin:0;max-width:none}.frame{height:100%;min-height:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+  .frame iframe{height:100%;background:transparent}.hint{display:none}
+  .nav{position:fixed;z-index:20;left:0;right:0;bottom:0;height:calc(64px + env(safe-area-inset-bottom));margin:0;padding:6px 10px max(6px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:rgba(4,16,11,.96);border-top:1px solid rgba(215,184,115,.18);backdrop-filter:blur(20px)}
+  .nav button{min-width:0;margin:0;padding:3px 4px;border:0;border-radius:13px;background:transparent;color:#83998d;font-size:0;line-height:1;box-shadow:none}
+  .nav button::before{content:attr(data-icon);display:block;width:27px;height:27px;margin:0 auto 3px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.055);font:16px/25px Georgia,"Times New Roman",serif;transition:.18s}
+  .nav button::after{content:attr(data-short);display:block;font-size:10px;font-weight:650;letter-spacing:.05em;line-height:1.1}
+  .nav button.active{background:transparent;border:0;color:#e5c77f;box-shadow:none}
+  .nav button.active::before{border-color:#e1c477;background:linear-gradient(145deg,#e2c77f,#ad7d35);color:#172019;box-shadow:0 4px 13px rgba(183,137,63,.24);transform:translateY(-1px)}
+  .nav button span{display:none}
+}
 </style>
 </head>
 <body>
 <header><div><h1>项目展示中心</h1><div class="sub">三个功能模块 · 统一入口</div></div><div class="status" id="runStatus">正在识别运行环境…</div></header>
 <nav class="nav" aria-label="功能模块">
-  <button class="active" data-target="red10Frame" data-port="8899" data-path="red10/" data-online="https://xiaohuan1314-red10-game.onrender.com/">红十战略开发<span>真人联机</span></button>
-  <button data-target="pokerFrame" data-port="8787" data-path="poker/" data-online="https://xiaohuan1314-poker-game.onrender.com/">赛马安卓讨论会议<span>真人联机</span></button>
-  <button data-target="dryeyeFrame" data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
+  <button class="active" data-icon="十" data-short="红十" data-target="red10Frame" data-port="8899" data-path="red10/" data-online="https://xiaohuan1314-red10-game.onrender.com/">红十战略开发<span>真人联机</span></button>
+  <button data-icon="♞" data-short="赛马" data-target="pokerFrame" data-port="8787" data-path="poker/" data-online="https://xiaohuan1314-poker-game.onrender.com/">赛马安卓讨论会议<span>真人联机</span></button>
+  <button data-icon="◉" data-short="干瞪眼" data-target="dryeyeFrame" data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
 </nav>
 <section class="stage"><div class="frame">
   <iframe id="red10Frame" title="红十模块"></iframe>
@@ -30,7 +45,9 @@ const isLocal=['localhost','127.0.0.1'].includes(location.hostname)||location.pr
 function moduleUrl(btn){return isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path)}
 function openModule(btn){
   buttons.forEach(x=>x.classList.remove('active'));
+  buttons.forEach(x=>x.removeAttribute('aria-current'));
   btn.classList.add('active');
+  btn.setAttribute('aria-current','page');
   const frame=document.getElementById(btn.dataset.target);
   frames.forEach(x=>x.hidden=x!==frame);
   if(!frame.hasAttribute('src')) frame.src=moduleUrl(btn);
