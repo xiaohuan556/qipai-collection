@@ -628,6 +628,19 @@ def room_list():
                            'max_players': MAX_PLAYERS, 'phase': game.phase})
     return result
 
+
+def delete_room(room_id, pid):
+    with ROOMS_LOCK:
+        info = ROOMS.get(room_id or '')
+        if not info:
+            return {'err': '房间不存在'}
+        game = info['game']
+        with game.lock:
+            if not game.players or game.players[0]['pid'] != pid:
+                return {'err': '只有房主可以删除房间'}
+        ROOMS.pop(room_id, None)
+    return {'err': None, 'ok': True}
+
 # ---------------------------------------------------------------- HTTP
 
 
@@ -686,6 +699,9 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split('?')[0]
         if path == '/api/create':
             self._json(create_room(data.get('room_name'), data.get('name'), data.get('bid', '')))
+            return
+        if path == '/api/delete-room':
+            self._json(delete_room(data.get('room'), data.get('pid', '')))
             return
         info = get_room(data.get('room'))
         if not info:

@@ -507,6 +507,19 @@ def room_list():
     return result
 
 
+def delete_room(room_id, pid):
+    with ROOMS_LOCK:
+        info = ROOMS.get(room_id or "")
+        if not info:
+            return {"error": "房间不存在"}
+        game = info["game"]
+        with game.lock:
+            if not game.order or game.order[0] != pid:
+                return {"error": "只有房主可以删除房间"}
+        ROOMS.pop(room_id, None)
+    return {"ok": True}
+
+
 def lan_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -570,6 +583,9 @@ class H(BaseHTTPRequestHandler):
             data = {}
         if self.path == "/api/create":
             self._send(create_room(data.get("room_name"), data.get("name"), data.get("bid")))
+            return
+        if self.path == "/api/delete-room":
+            self._send(delete_room(data.get("room"), data.get("pid")))
             return
         info = get_room(data.get("room"))
         if not info:

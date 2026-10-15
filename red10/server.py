@@ -663,6 +663,19 @@ def get_room(room_id):
     return info
 
 
+def delete_room(room_id, pid):
+    with ROOMS_LOCK:
+        info = ROOMS.get(room_id or "")
+        if not info:
+            return {"error": "房间不存在"}
+        game = info["game"]
+        with game.lock:
+            if not game.order or game.order[0] != pid:
+                return {"error": "只有房主可以删除房间"}
+        ROOMS.pop(room_id, None)
+    return {"ok": True}
+
+
 # ------------------------------------------------------------------ HTTP
 def h_join(g, d):
     return g.join(d.get("name"), d.get("bid"))
@@ -781,6 +794,10 @@ class Handler(BaseHTTPRequestHandler):
             data = {}
         if u.path == "/api/create":
             res = create_room(data.get("room_name"), data.get("name"), data.get("bid"))
+            self._send(200, json.dumps(res, ensure_ascii=False))
+            return
+        if u.path == "/api/delete-room":
+            res = delete_room(data.get("room"), data.get("pid"))
             self._send(200, json.dumps(res, ensure_ascii=False))
             return
         fn = ROUTES.get(u.path)
