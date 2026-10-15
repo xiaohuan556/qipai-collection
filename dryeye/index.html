@@ -110,7 +110,7 @@ details summary { color:#34475b; }
 <script>
 var pid = localStorage.gy_pid || null;
 var bid = localStorage.gy_bid || (localStorage.gy_bid = Math.random().toString(36).slice(2, 12));
-var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null;
+var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null, offlinePreview = false;
 var lastViewKey = '', homeMode = false;
 
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -190,6 +190,13 @@ function lobbyView(){
   var lobbyActions = pidInList() ? '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="doRestart()">重新开始</button>' +
     '<button class="btn-red" style="font-size:11px;padding:4px 10px" onclick="doExitHome()">退出主页面</button>' : '';
   var h = '<div class="topbar"><h1>👁️ 干瞪眼 iOS 商业落地</h1><span class="badge">测试桌 · 底分 ¥' + S.base + '</span><div class="spacer"></div>' + lobbyActions + '</div>';
+  if (offlinePreview){
+    h += '<div class="panel" style="max-width:520px;margin:12vh auto 0;text-align:center">' +
+      '<h2>在线界面预览</h2>' +
+      '<div class="msg">GitHub Pages 已成功加载本模块。完整的开局、机器人、联机和结算功能需要下载项目后运行“启动棋牌合集.bat”。</div>' +
+      '</div>' + rulesHtml();
+    return h;
+  }
   if (!S.you && !pidInList()){
     h += '<div class="panel" style="max-width:380px;margin:12vh auto 0">' +
       '<h2>加入测试桌</h2>' +
@@ -391,7 +398,13 @@ function poll(){
       if (pid && !pidInList() && j.phase !== 'lobby'){ /* 观战 */ }
       render();
     })
-    .catch(function(){});
+    .catch(function(){
+      if (!S && location.hostname.endsWith('github.io')){
+        offlinePreview = true;
+        S = { phase:'lobby', base:1, players:[], you:null };
+        render();
+      }
+    });
 }
 setInterval(poll, 1000);
 poll();
