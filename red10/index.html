@@ -109,6 +109,28 @@
     details.rules{padding:4px 5px}details.rules summary{color:#a5b2d0}details.rules div{color:#cbd4eb}.guide-card{background:rgba(255,255,255,.045);border-color:rgba(166,187,240,.11)}.guide-card p{color:#c1cbe2}.strategy-note{background:rgba(126,161,255,.09);border-color:rgba(126,161,255,.27);color:#c8d7ff}.rule-table th,.rule-table td,.tbl th,.tbl td{border-color:rgba(166,187,240,.11)}
     #abortBtn{left:10px!important;right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;width:calc(100% - 20px);margin:0!important;z-index:60;backdrop-filter:blur(14px)}
   }
+  @media(max-width:680px){
+    body{background-image:radial-gradient(circle at 12% 4%,rgba(101,139,255,.26),transparent 29%),radial-gradient(circle at 92% 28%,rgba(119,86,255,.13),transparent 31%),linear-gradient(165deg,#121a38 0,#090e20 56%,#060914 100%);background-attachment:fixed}
+    body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.22;background-image:linear-gradient(rgba(255,255,255,.024) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.024) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(to bottom,#000,transparent 58%)}
+    body>h1{font-size:22px;font-weight:760;letter-spacing:.12em;margin-top:3px;background:none;color:#f4f7ff;-webkit-text-fill-color:#f4f7ff;text-shadow:0 0 26px rgba(130,166,255,.2)}
+    body>.sub{color:#8997ba;letter-spacing:.04em}
+    .panel{position:relative;isolation:isolate;border-color:rgba(164,187,246,.17);background:linear-gradient(145deg,rgba(25,35,70,.82),rgba(9,14,31,.9));box-shadow:0 22px 54px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.065);backdrop-filter:blur(22px) saturate(125%)}
+    .panel::before{content:"";position:absolute;z-index:-1;left:18px;right:18px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(190,208,255,.5),transparent);pointer-events:none}
+    .panel h2{letter-spacing:.04em}.room-gate{border-radius:22px;padding:18px 14px}
+    input{border-radius:14px;box-shadow:inset 0 1px 4px rgba(0,0,0,.2);transition:border-color .2s,box-shadow .2s,background .2s}
+    input:focus{outline:0;background:rgba(255,255,255,.11);border-color:#8eb0ff;box-shadow:0 0 0 3px rgba(111,151,255,.15),inset 0 1px 4px rgba(0,0,0,.18)}
+    button{position:relative;overflow:hidden;letter-spacing:.02em;box-shadow:0 8px 22px rgba(53,80,164,.3),inset 0 1px rgba(255,255,255,.42);transition:transform .16s ease,filter .16s ease}
+    button:active{transform:translateY(1px) scale(.98);filter:brightness(.94)}button.ghost{box-shadow:inset 0 1px rgba(255,255,255,.06)}
+    .room-row{position:relative;border-radius:16px;padding:13px 12px 13px 17px;background:linear-gradient(120deg,rgba(255,255,255,.07),rgba(255,255,255,.025));box-shadow:inset 0 1px rgba(255,255,255,.035)}
+    .room-row::before{content:"";position:absolute;left:7px;top:50%;width:4px;height:26px;border-radius:4px;transform:translateY(-50%);background:linear-gradient(#9dbbff,#637ee5);box-shadow:0 0 12px rgba(109,143,239,.55)}
+    .room-row>button{border-radius:12px}
+    .seat{box-shadow:inset 0 1px rgba(255,255,255,.045)}.seat.turn{background:linear-gradient(145deg,rgba(126,161,255,.18),rgba(73,91,170,.1))}
+    .board{border-radius:46% / 22%;outline:1px solid rgba(124,155,232,.1);outline-offset:4px;background:radial-gradient(ellipse at 50% 44%,#31589c 0,#1b3568 48%,#0b1935 100%);box-shadow:inset 0 0 52px rgba(1,5,18,.45),inset 0 1px rgba(210,225,255,.16),0 14px 34px rgba(0,0,0,.25)}
+    .card{border:1px solid rgba(255,255,255,.88);background:linear-gradient(145deg,#fffefb 0,#f4efe4 72%,#ded6c8 100%);box-shadow:0 8px 17px rgba(2,6,18,.4),inset 0 1px #fff}.hand .card{box-shadow:0 7px 15px rgba(1,5,18,.4),inset 0 1px #fff}
+    .hand .card.sel,.card.reorder-picked{box-shadow:0 0 0 2px #8eb1ff,0 10px 22px rgba(64,105,210,.4),inset 0 1px #fff}
+    .pill{border:1px solid rgba(160,184,244,.1);box-shadow:inset 0 1px rgba(255,255,255,.04)}
+    details.rules{border-radius:15px;background:rgba(255,255,255,.025);border:1px solid rgba(158,181,240,.09);padding:9px 11px}
+  }
 </style>
 </head>
 <body>
