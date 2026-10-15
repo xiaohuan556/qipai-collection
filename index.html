@@ -7,23 +7,34 @@
 <style>
 :root{--bg:#eef2f7;--panel:#fff;--ink:#18263a;--sub:#6d7a8d;--line:#d7e0ea;--blue:#244b73;--gold:#b47b20;--red:#b94b4b}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#edf2f8,#f8f9fb);color:var(--ink);font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}header{max-width:1180px;margin:auto;padding:24px 22px 14px;display:flex;align-items:end;justify-content:space-between;gap:20px}h1{font-size:24px;margin:0;letter-spacing:.04em}.sub{color:var(--sub);font-size:13px;margin-top:2px}.status{color:var(--sub);font-size:12px;text-align:right}.nav{max-width:1180px;margin:0 auto 12px;padding:0 22px;display:flex;gap:8px;flex-wrap:wrap}.nav button{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer;font:inherit;box-shadow:0 3px 10px #243a5b0d}.nav button.active{background:var(--blue);border-color:var(--blue);color:#fff}.nav button span{display:block;font-size:11px;opacity:.7}.stage{max-width:1180px;margin:0 auto;padding:0 22px 30px}.frame{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 12px 32px #243a5b14;min-height:720px}.frame iframe{display:block;width:100%;height:760px;border:0;background:#fff}.hint{max-width:1180px;margin:0 auto;padding:0 22px 18px;color:var(--sub);font-size:12px}@media(max-width:700px){header{display:block;padding:18px 14px 10px}.status{text-align:left;margin-top:6px}.nav,.stage{padding-left:12px;padding-right:12px}.frame iframe{height:820px}}
+.frame iframe[hidden]{display:none}
 </style>
 </head>
 <body>
 <header><div><h1>项目展示中心</h1><div class="sub">三个功能模块 · 统一入口</div></div><div class="status" id="runStatus">正在识别运行环境…</div></header>
 <nav class="nav" aria-label="功能模块">
-  <button class="active" data-port="8899" data-path="red10/">红十战略开发<span>牌局模块</span></button>
-  <button data-port="8787" data-path="poker/">赛马安卓讨论会议<span>牌面分配</span></button>
-  <button data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
+  <button class="active" data-target="red10Frame" data-port="8899" data-path="red10/">红十战略开发<span>牌局模块</span></button>
+  <button data-target="pokerFrame" data-port="8787" data-path="poker/">赛马安卓讨论会议<span>牌面分配</span></button>
+  <button data-target="dryeyeFrame" data-port="8895" data-path="dryeye/?preview=2" data-online="https://xiaohuan1314-dryeye-game.onrender.com/">干瞪眼 iOS 商业落地<span>真人联机</span></button>
 </nav>
-<section class="stage"><div class="frame"><iframe id="gameFrame" title="功能模块"></iframe></div></section>
+<section class="stage"><div class="frame">
+  <iframe id="red10Frame" title="红十模块"></iframe>
+  <iframe id="pokerFrame" title="赛马模块" hidden></iframe>
+  <iframe id="dryeyeFrame" title="干瞪眼模块" hidden></iframe>
+</div></section>
 <div class="hint" id="runHint"></div>
 <script>
-const frame=document.getElementById('gameFrame');
 const buttons=[...document.querySelectorAll('.nav button')];
+const frames=[...document.querySelectorAll('.frame iframe')];
 const isLocal=['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
 function moduleUrl(btn){return isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path)}
-function openModule(btn){buttons.forEach(x=>x.classList.remove('active'));btn.classList.add('active');frame.src=moduleUrl(btn)}
+function openModule(btn){
+  buttons.forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  const frame=document.getElementById(btn.dataset.target);
+  frames.forEach(x=>x.hidden=x!==frame);
+  if(!frame.hasAttribute('src')) frame.src=moduleUrl(btn);
+}
 buttons.forEach(btn=>btn.addEventListener('click',()=>openModule(btn)));
 document.getElementById('runStatus').innerHTML=isLocal?'本地完整运行<br>模块独立，数据互不干扰':'GitHub Pages 在线预览<br>源代码已同步';
 document.getElementById('runHint').textContent=isLocal?'启动方式：双击本文件夹里的“启动棋牌合集.bat”。如果某个模块显示连接中，请确认启动窗口仍在运行。':'干瞪眼已接入外网真人联机；红十和赛马目前仍为界面预览。免费服务长时间无人访问后，首次打开可能需要等待约一分钟。';
