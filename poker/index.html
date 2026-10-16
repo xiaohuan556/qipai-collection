@@ -97,6 +97,7 @@
     #assign{background:linear-gradient(145deg,rgba(25,41,79,.94),rgba(8,15,33,.97))}#handWrap{outline:1px solid rgba(124,155,232,.1);outline-offset:4px;background:radial-gradient(ellipse at 50% 44%,#31589c 0,#1b3568 50%,#0b1935 100%);box-shadow:inset 0 0 52px rgba(1,5,18,.45),inset 0 1px rgba(210,225,255,.16),0 14px 34px rgba(0,0,0,.25)}
     .card{border:1px solid rgba(255,255,255,.88);background:linear-gradient(145deg,#fffefb 0,#f4efe4 72%,#ded6c8 100%);box-shadow:0 8px 17px rgba(2,6,18,.4),inset 0 1px #fff}.card.sel{outline-color:#91b2ff;box-shadow:0 0 0 2px #8eb1ff,0 10px 22px rgba(64,105,210,.4),inset 0 1px #fff}
     .slot{box-shadow:inset 0 1px rgba(255,255,255,.045);backdrop-filter:blur(8px)}.slot.hover{box-shadow:0 0 0 2px rgba(137,174,255,.16),inset 0 1px rgba(255,255,255,.06)}
+    .card,.slot{touch-action:pan-y}
     .pendingConfirm{backdrop-filter:blur(12px)}.rules{border-radius:15px}
   }
   @media(max-width:680px){
@@ -337,6 +338,10 @@ async function pollRooms(){
     ).join('') : '<div class="hint">还没有房间，你可以创建第一个。</div>';
   }catch(e){ document.getElementById('roomList').innerHTML='<div class="hint">房间列表暂时连接不上</div>'; }
 }
+function parentClientId(){
+  const value=new URLSearchParams(location.hash.slice(1)).get('client')||'';
+  return /^[A-Za-z0-9_-]{16,80}$/.test(value)?value:'';
+}
 async function createRoom(){
   const name=document.getElementById('creatorInput').value.trim();
   const roomName=document.getElementById('roomNameInput').value.trim();
@@ -362,8 +367,9 @@ function renderRoomGate(){
 }
 
 function bidGet() {
-  let b = localStorage.getItem("poker_bid");
+  let b = parentClientId() || localStorage.getItem("poker_bid");
   if (!b) { b = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("poker_bid", b); }
+  else if (parentClientId()) localStorage.setItem("poker_bid", b);
   return b;
 }
 
@@ -488,7 +494,7 @@ document.addEventListener("pointerdown", e => {
   if (!cardEl || cardEl.classList.contains("ghostcard")) return;
   if (!S || S.phase !== "assign" || (S.you && S.you.locked)) return;
   drag = { code: cardEl.dataset.c, from: cardEl.dataset.from, sx: e.clientX, sy: e.clientY, moved: false, el: null, src: cardEl };
-  e.preventDefault();
+  if (e.pointerType !== "touch") e.preventDefault();
 });
 
 document.addEventListener("pointermove", e => {
@@ -507,11 +513,13 @@ document.addEventListener("pointermove", e => {
 function endDrag(e) {
   if (!drag) return;
   const d = drag;
+  const cancelled = e.type === "pointercancel";
   drag = null;
   document.querySelectorAll(".slot").forEach(s => s.classList.remove("hover"));
   document.getElementById("handWrap").classList.remove("hover");
   d.src && d.src.removeAttribute("dragging");
   if (d.el) d.el.remove();
+  if (cancelled) return;
   if (d.moved) {
     const t = dropTargetAt(e.clientX, e.clientY);
     if (t === "hand") { removeFromGroup(d.code, d.from); renderAssign(); }

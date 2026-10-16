@@ -607,7 +607,8 @@ def create_room(room_name, creator, bid):
     with ROOMS_LOCK:
         while room_id in ROOMS:
             room_id = uuid.uuid4().hex[:8]
-        ROOMS[room_id] = {'name': room_name, 'creator': creator, 'game': game}
+        ROOMS[room_id] = {'name': room_name, 'creator': creator,
+                          'owner_bid': bid or '', 'game': game}
     return {'room': room_id, 'pid': pid, 'err': None}
 
 
@@ -624,7 +625,7 @@ def room_list(bid=None):
         game = info['game']
         with game.lock:
             owner = game.players[0] if game.players else None
-            owns_by_browser = bool(bid and owner and owner.get('bid') == bid)
+            owns_by_browser = bool(bid and info.get('owner_bid') == bid)
             result.append({'id': room_id, 'name': info['name'],
                            'creator': info['creator'], 'players': len(game.players),
                            'max_players': MAX_PLAYERS, 'phase': game.phase,
@@ -641,7 +642,7 @@ def delete_room(room_id, pid, bid=None):
         game = info['game']
         with game.lock:
             owner = game.players[0] if game.players else None
-            owns_by_browser = bool(bid and owner and owner.get('bid') == bid)
+            owns_by_browser = bool(bid and info.get('owner_bid') == bid)
             if not owner or (owner['pid'] != pid and not owns_by_browser):
                 return {'err': '只有房主可以删除房间'}
         ROOMS.pop(room_id, None)

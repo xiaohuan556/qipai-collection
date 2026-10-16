@@ -326,9 +326,16 @@ async function api(path, body){
   }catch(e){ toast("网络出错"); return {error:"net"}; }
 }
 function escRoom(s){ return String(s||"").replace(/[&<>\"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function browserId(){
+  const shared=new URLSearchParams(location.hash.slice(1)).get('client')||'';
+  if(/^[A-Za-z0-9_-]{16,80}$/.test(shared)){ localStorage.setItem('hs_bid',shared); return shared; }
+  let bid=localStorage.getItem('hs_bid');
+  if(!bid){ bid=Date.now().toString(36)+Math.random().toString(36).slice(2,7); localStorage.setItem('hs_bid',bid); }
+  return bid;
+}
 async function pollRooms(){
   try{
-    const bid = localStorage.getItem('hs_bid') || '';
+    const bid = browserId();
     const j = await (await fetch('/api/rooms?bid='+encodeURIComponent(bid),{cache:'no-store'})).json();
     const rooms = j.rooms || [];
     document.getElementById('roomList').innerHTML = rooms.length ? rooms.map(r=>
@@ -342,8 +349,7 @@ async function createRoom(){
   const name = document.getElementById('creatorInput').value.trim();
   const roomName = document.getElementById('roomNameInput').value.trim();
   if(!name) return toast('先输入你的名字');
-  const bid = localStorage.getItem('hs_bid') || (Date.now().toString(36)+Math.random().toString(36).slice(2,7));
-  localStorage.setItem('hs_bid',bid);
+  const bid = browserId();
   const r = await api('/api/create',{name:name,room_name:roomName,bid:bid});
   if(r.error) return;
   room=r.room; pid=r.pid; localStorage.setItem('hs_room',room); localStorage.setItem('hs_pid',pid); S=null; poll();
@@ -352,7 +358,7 @@ function openRoom(id, ownerPid){ room=id; pid=ownerPid||''; S=null; localStorage
 function leaveRoom(){ room=''; pid=''; S=null; sel.clear(); localStorage.removeItem('hs_room'); localStorage.removeItem('hs_pid'); renderRoomGate(); pollRooms(); }
 async function deleteOwnedRoom(roomId){
   if(!confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和账目无法恢复。')) return;
-  const r=await (await fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:localStorage.getItem('hs_bid')||''})})).json();
+  const r=await (await fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:browserId()})})).json();
   if(r.error) return toast(r.error);
   if(room===roomId) leaveRoom(); else pollRooms();
 }
@@ -366,8 +372,7 @@ function renderRoomGate(){
 async function join(){
   const nm = document.getElementById("nameInput").value.trim();
   if(!nm) return toast("先输入名字");
-  const bid = localStorage.getItem("hs_bid") || (Date.now().toString(36)+Math.random().toString(36).slice(2,7));
-  localStorage.setItem("hs_bid", bid);
+  const bid = browserId();
   const r = await api("/api/join",{name:nm, bid:bid});
   if(r.pid){ pid = r.pid; localStorage.setItem("hs_pid", pid); sel.clear(); await poll(); }
 }

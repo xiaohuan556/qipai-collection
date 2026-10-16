@@ -103,6 +103,7 @@ details { background:#f7f9fb; border:1px solid #dce4ec; color:#526579; }
 details summary { color:#34475b; }
 .toast { background:#fff; color:#263648; border-color:#d8e0e8; box-shadow:0 8px 24px rgba(40,58,78,.16); }
 .err { color:#b44d43; }
+.dealer-art { display:none; }
 @media (max-width:600px){
   html{background:#080c18}body{min-height:100dvh;color:#f1f4ff;background:radial-gradient(circle at 50% -8%,#293f7d 0,#141d3b 38%,#080c18 82%)}
   #app{min-height:100dvh;padding:8px 10px calc(198px + env(safe-area-inset-bottom));overflow:visible}
@@ -152,9 +153,14 @@ details summary { color:#34475b; }
 <body>
 <div id="app"></div>
 <script>
+function parentClientId(){
+  var value=new URLSearchParams(location.hash.slice(1)).get('client')||'';
+  return /^[A-Za-z0-9_-]{16,80}$/.test(value)?value:'';
+}
 var room = localStorage.gy_room || '';
 var pid = localStorage.gy_pid || null;
-var bid = localStorage.gy_bid || (localStorage.gy_bid = Math.random().toString(36).slice(2, 12));
+var bid = parentClientId() || localStorage.gy_bid || Math.random().toString(36).slice(2, 12);
+localStorage.gy_bid = bid;
 var S = null, sel = {}, selN = 0, lastDeal = -1, errTimer = null, offlinePreview = false;
 var rooms = [], lastRoomsKey = '', lastViewKey = '', homeMode = false;
 var handSortMode = localStorage.gy_hand_sort || 'smart';

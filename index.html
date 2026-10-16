@@ -62,7 +62,20 @@
 const buttons=[...document.querySelectorAll('.nav button')];
 const frames=[...document.querySelectorAll('.frame iframe')];
 const isLocal=['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
-function moduleUrl(btn){return isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path)}
+function clientId(){
+  let id=localStorage.getItem('qipai_client_id');
+  if(!id){
+    id=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/-/g,'');
+    localStorage.setItem('qipai_client_id',id);
+  }
+  return id;
+}
+function moduleUrl(btn){
+  const base=isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path);
+  const url=new URL(base,location.href);
+  url.hash='client='+encodeURIComponent(clientId());
+  return url.href;
+}
 function openModule(btn){
   buttons.forEach(x=>x.classList.remove('active'));
   buttons.forEach(x=>x.removeAttribute('aria-current'));
