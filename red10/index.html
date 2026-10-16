@@ -231,7 +231,7 @@
     <span class="pill" id="dDeclared"></span>
   </div>
   <div class="round-alerts" id="declareAlerts"></div>
-  <div class="hint">这是你的 10 张牌 —— <b>有红十可以「亮红十」</b>；没红十但手里有「三张一样」可以「揪牌」逼红十亮出来。亮或揪都算开局翻倍。</div>
+  <div class="hint"><b>出牌前先准备：</b>有红十可选择亮或不亮，有三张/四张炸弹可选择揪或不揪。你的可选项只显示在自己屏幕上，其他人只能看到“准备中 / 已准备”。</div>
   <div class="hand-head">
     <div class="hint">手牌只在你这台设备保存排序，不影响牌局；电脑版可拖牌或点两张交换。<span class="mobile-hand-tip" style="display:none">手机版点牌只会选择，不会交换。</span></div>
     <div class="hand-tools"><button class="ghost" id="dReorderBtn" onclick="toggleReorder()">↔ 调整牌序</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
@@ -241,7 +241,7 @@
     <button id="btnLiang" class="liang" onclick="declare('liang')">🔴 亮红十</button>
     <button id="btnJiu" class="jiu" onclick="declare('jiu')">🔍 揪牌</button>
     <button id="btnSur" class="warn" onclick="if(confirm('确定投降？每人输 '+ (S.base*4) +' 元'))declare('surrender')">🏳️ 投降</button>
-    <button id="btnOk" onclick="declare('ok')">不亮，开始出牌</button>
+    <button id="btnOk" onclick="declare('ok')">✓ 不亮 / 不揪，准备</button>
   </div>
   <div class="hint" id="dHint" style="margin-top:8px"></div>
   <div class="seats" id="dSeats" style="margin-top:10px"></div>
@@ -705,26 +705,26 @@ function renderDeclare(){
   document.getElementById("dRound").textContent = S.round_no;
   document.getElementById("dBase").textContent = S.base;
   document.getElementById("dDeclared").className = "pill" + (S.declared?" on":"");
-  document.getElementById("dDeclared").textContent = S.declared ? "明打（已翻倍）" : "暗打";
+  document.getElementById("dDeclared").textContent = S.declared ? "有人亮 / 揪（已翻倍）" : "准备阶段";
   renderRoundAlerts("declareAlerts");
 
   renderHand("dHand", false);
-  document.getElementById("dSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
-
   const ready = S.players.filter(p=>String(p.choice||"")!=="").length;
-  const cname = {"liang":"已亮红十","jiu":"已揪牌","ok":"不亮"};
-  if(ready < S.players.length)
-    document.getElementById("dSeats").innerHTML = S.players.map(p=>{
-      const extra = p.choice ? ('<div class="hint">'+ (cname[p.choice]||p.choice) +'</div>') : '<div class="hint">待选择…</div>';
-      return seatHtml(p).replace('</div>', extra + '</div>');
-    }).join("");
+  const cname = {"liang":"亮红十","jiu":"揪牌","ok":"不亮 / 不揪"};
+  document.getElementById("dSeats").innerHTML = S.players.map(p=>{
+    const extra = p.choice
+      ? '<div class="hint" style="color:#2a9d3f;font-weight:800">✅ 已准备</div>'
+      : '<div class="hint">⏳ 准备中</div>';
+    const seat = seatHtml(p);
+    return seat.slice(0,-6) + extra + '</div>';
+  }).join("");
   document.getElementById("btnLiang").style.display = (S.can_liang && !S.my_choice) ? "inline-block":"none";
   document.getElementById("btnJiu").style.display   = (S.can_jiu   && !S.my_choice) ? "inline-block":"none";
   document.getElementById("btnSur").style.display   = S.can_surrender ? "inline-block":"none";
   document.getElementById("btnOk").style.display    = !S.my_choice ? "inline-block":"none";
-  let h = S.my_choice ? "你已选择：" + (cname[S.my_choice]||S.my_choice) + "，等其他人…" : "";
+  let h = S.my_choice ? "你已选择：" + (cname[S.my_choice]||S.my_choice) + "，已准备，等待其他人…" : "请完成你的选择并准备";
   if(S.declared) h += "　（本局已翻倍）";
-  document.getElementById("dHint").textContent = h + "　" + ready + "/" + S.players.length + " 已选择";
+  document.getElementById("dHint").textContent = h + "　" + ready + "/" + S.players.length + " 已准备";
 }
 
 function renderPlay(){

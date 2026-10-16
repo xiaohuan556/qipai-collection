@@ -498,7 +498,7 @@ class Game:
         return moves
 
     def _bot_declare(self, pid):
-        # 有揪牌条件时积极揪；拿红十时多数暗打，偶尔亮牌增加变化。
+        # 有揪牌条件时可揪也可不揪；拿红十时可亮也可不亮。
         if self.can_jiu(pid):
             action = "jiu" if random.random() < 0.7 else "ok"
         elif self.can_liang(pid):
@@ -724,7 +724,9 @@ class Game:
                 "is_me": q == pid,
                 "is_bot": bool(pl.get("is_bot")),
                 "jiu_by": q in self.jiu_by,
-                "choice": pl["choice"],
+                # 准备阶段只公开是否已准备，不把“不亮/不揪”等私下选择暴露给别人。
+                "choice": (pl["choice"] if q == pid else
+                           ("ready" if pl["choice"] else None)),
             })
         st = {
             "phase": self.phase,
