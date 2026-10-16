@@ -147,7 +147,7 @@ class Game:
         self.ledger = {}       # pid -> 累计盈亏
         self.result = None
         self.last_round_delta = {}
-        self.next_leader = None       # 上一局赢家，作为下一局先手
+        self.next_leader = None       # 上一局最先走完的玩家，作为下一局先手
         self.round_leader = None      # 当前局第一手玩家
         self._reset_round()
 
@@ -250,7 +250,8 @@ class Game:
             self.p[pid]["choice"] = None
         self.red_holders = [pid for pid in self.order
                             if any(c in RED10 for c in self.p[pid]["hand"])]
-        # 首局由红桃6先出；之后由上一局赢家先出。平局则重新按红桃6决定。
+        # 首局由红桃6先出；之后由上一局最先走完的人先出。
+        # 双红十投降、四个十直接赢时没有正常走完顺序，重新按红桃6决定。
         leader = self.next_leader if self.round_no > 1 and self.next_leader in self.p else None
         if leader is None:
             for pid in self.order:
@@ -525,12 +526,10 @@ class Game:
                      "surrender": "🏳️ 双红十投降"}[kind]
         out_order = sorted([p for p in self.order if self.p[p]["out"]],
                            key=lambda p: self.p[p]["out_order"])
-        if winner in winners:
-            self.next_leader = winner
+        if kind in ("surrender", "instant"):
+            self.next_leader = None
         else:
-            ranked_winners = [p for p in out_order if p in winners]
-            self.next_leader = (ranked_winners[0] if ranked_winners else
-                                next((p for p in self.order if p in winners), None))
+            self.next_leader = out_order[0] if out_order else None
         self.result = {
             "kind": kind, "text": kind_text,
             "red": red, "civil": civil,

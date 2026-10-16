@@ -266,7 +266,7 @@
     <b>接风</b>：出完牌的人如果对方都要不上，<b>队友接风</b>先出（暗打时队伍没明朗，按顺序由下家接）。<br>
     <b>双红十</b>：两张红十不能凑对、不能凑顺，但可以凑三个十。<b>四个十直接赢三家。</b><br>
     <b>亮牌 / 揪牌</b>：发完牌后有红十的可以「亮红十」（同时拿两张就一起亮）；没红十而有「三张一样」的可以「揪」，逼红十玩家亮出来。亮或揪 = 明打，开局翻倍。<br>
-    <b>出牌</b>：首局第一手由抓到 <b>红桃6</b> 的人先出；从第二局起，由上一局获胜方中最先走完的玩家先出。平局时重新由红桃6持有者先出。<br>
+    <b>出牌</b>：首局第一手由抓到 <b>红桃6</b> 的人先出；从第二局起，由上一局最先走完的玩家先出（平局也一样）。只有双红十投降或四个十直接赢时，下一局才重新由红桃6持有者先出。<br>
     <b>输赢</b>：红十持有者一队，其余人为另一队（一人拿双红十则 1 打 3）。<br>
     &nbsp;&nbsp;· 红十方赢：把红十都走掉（双红十第一个走完即赢）<br>
     &nbsp;&nbsp;· 平局：一张红十走掉、另一张被抓（双红十被人先跑掉两个算平局）<br>
@@ -656,7 +656,7 @@ function renderResult(){
     ? "💸 转账清单：" + r.transfers.map(t=>names[t["from"]]+" → "+names[t["to"]]+" <b>"+t.amount+" 元</b>").join("　")
     : "本局平局，不用给钱。";
   const orderText = r.out_order.length ? "出完顺序：" + r.out_order.join(" → ") : "";
-  const nextText = r.next_leader ? "下一局先手：" + r.next_leader : "下一局先手：重新按红桃6决定";
+  const nextText = r.next_leader ? "下一局先手：" + r.next_leader : "下一局先手：重新按红桃6决定（投降或四个十）";
   document.getElementById("rOrder").textContent = [orderText, nextText].filter(Boolean).join("　·　");
   document.getElementById("btnResetMoney").style.display = S.is_host ? "inline-block" : "none";
 }
