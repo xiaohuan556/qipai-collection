@@ -103,7 +103,6 @@ details { background:#f7f9fb; border:1px solid #dce4ec; color:#526579; }
 details summary { color:#34475b; }
 .toast { background:#fff; color:#263648; border-color:#d8e0e8; box-shadow:0 8px 24px rgba(40,58,78,.16); }
 .err { color:#b44d43; }
-.dealer-art { display:none; }
 @media (max-width:600px){
   html{background:#080c18}body{min-height:100dvh;color:#f1f4ff;background:radial-gradient(circle at 50% -8%,#293f7d 0,#141d3b 38%,#080c18 82%)}
   #app{min-height:100dvh;padding:8px 10px calc(198px + env(safe-area-inset-bottom));overflow:visible}
@@ -145,8 +144,6 @@ details summary { color:#34475b; }
   .hand .card.sel{box-shadow:0 0 0 2px #72d2a2,0 12px 24px rgba(35,137,83,.4),inset 0 1px #fff}.hand-wrap{border-top-color:rgba(130,192,158,.09);background:linear-gradient(180deg,rgba(4,12,7,0),rgba(6,22,14,.91) 16%,rgba(4,12,7,.98) 46%)}
   .hand-toolbar span{color:#8fa697}.hand-toolbar button.active{color:#06130c;background:linear-gradient(145deg,#8addb1,#3b976b);box-shadow:0 5px 14px rgba(29,112,72,.3),inset 0 1px rgba(255,255,255,.38)}
   .log,details{border-color:rgba(138,197,165,.1);color:#c3d3c9}details summary{color:#add6bd}.chip{border-color:rgba(138,197,165,.11);color:#cfddd4}.overlay{background:rgba(2,10,6,.78)}table.res th,table.res td{border-color:rgba(138,197,165,.11)}table.res .win td{color:#9bd5b4}.toast{background:#0d2d1d;border-color:rgba(138,197,165,.16)}
-  .dealer-art{width:146px;height:146px;margin:-13px 12px -2px auto;position:relative;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 18px 22px rgba(0,0,0,.28));animation:dealerFloat 3.8s ease-in-out infinite}.dealer-art img{width:100%;height:100%;object-fit:contain}.dealer-art span{position:absolute;right:0;bottom:4px;padding:4px 9px;border:1px solid rgba(143,205,172,.2);border-radius:999px;background:rgba(6,25,15,.76);color:#b8dcc7;font-size:9px;letter-spacing:.08em;backdrop-filter:blur(10px)}
-  @keyframes dealerFloat{50%{transform:translateY(-5px)}}
 }
 </style>
 </head>
@@ -277,8 +274,7 @@ function roomsView(){
     '<div class="panel" style="max-width:620px;margin:10vh auto 16px"><h2>创建房间</h2>' +
     '<div class="msg">每个人都可以自由创建房间；创建者就是该房间房主。</div>' +
     '<div class="row"><input type="text" id="creator" placeholder="你的名字" maxlength="12"><input type="text" id="roomName" placeholder="房间名（可不填）" maxlength="20"></div>' +
-    '<div class="row"><button class="btn-gold" onclick="doCreateRoom()">创建房间</button></div></div>' +
-    '<div class="dealer-art" aria-hidden="true"><img src="dealer.png" alt=""><span>荷官在线</span></div>' + list;
+    '<div class="row"><button class="btn-gold" onclick="doCreateRoom()">创建房间</button></div></div>' + list;
 }
 
 function pollRooms(){

@@ -92,7 +92,6 @@
   #toast.show{opacity:.93}
   .room-gate{max-width:720px;margin:18px auto}.room-create{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.room-create input{min-width:150px}
   .room-list{display:grid;gap:8px;margin-top:14px}.room-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafafb}.room-row .meta{font-size:12px;color:var(--sub)}
-  .dealer-art{display:none}
   @media(max-width:680px){
     :root{--bg:#080c18;--panel:rgba(15,22,45,.94);--line:rgba(151,178,240,.18);--txt:#f3f6ff;--sub:#9ca9c9;--blue:#83a8ff;--gold:#83a8ff;--green:#69d1bb;--red:#ff747b}
     html{background:#080c18}body{min-height:100dvh;padding:12px 10px calc(94px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% -8%,#293f7d 0,#141d3b 34%,#080c18 76%);text-align:left}
@@ -146,8 +145,6 @@
     .pill{border-color:rgba(138,197,165,.11);color:#bdcec4}.board{border-color:rgba(125,198,159,.2);outline-color:rgba(96,168,130,.12);background:radial-gradient(ellipse at 50% 44%,#257a52 0,#155139 48%,#092a1b 100%);box-shadow:inset 0 0 52px rgba(1,12,7,.48),inset 0 1px rgba(211,241,224,.14),0 14px 34px rgba(0,0,0,.28)}.board .lbl{color:#a8c3b3}
     .hand .card.sel,.card.reorder-picked{box-shadow:0 0 0 2px #72d2a2,0 10px 22px rgba(35,137,83,.38),inset 0 1px #fff}
     details.rules{border-color:rgba(137,196,164,.1)}details.rules summary{color:#9fb7a9}details.rules div{color:#c7d6cd}.strategy-note{background:rgba(83,183,128,.09);border-color:rgba(83,183,128,.25);color:#c3e3d1}.guide-card{border-color:rgba(137,196,164,.1)}
-    body.choosing-room .dealer-art{display:flex}.dealer-art{width:142px;height:142px;margin:-4px 13px 2px auto;position:relative;align-items:center;justify-content:center;filter:drop-shadow(0 18px 22px rgba(0,0,0,.28));animation:dealerFloat 3.8s ease-in-out infinite}.dealer-art img{width:100%;height:100%;object-fit:contain}.dealer-art span{position:absolute;right:0;bottom:4px;padding:4px 9px;border:1px solid rgba(143,205,172,.2);border-radius:999px;background:rgba(6,25,15,.76);color:#b8dcc7;font-size:9px;letter-spacing:.08em;backdrop-filter:blur(10px)}
-    @keyframes dealerFloat{50%{transform:translateY(-5px)}}
   }
 </style>
 </head>
@@ -166,7 +163,6 @@
   </div>
   <div id="roomList" class="room-list"><div class="hint">正在读取房间…</div></div>
 </div>
-<div class="dealer-art" aria-hidden="true"><img src="dealer.png" alt=""><span>荷官在线</span></div>
 <div style="text-align:center;margin-bottom:8px"><button id="roomSwitchBtn" class="ghost" style="display:none" onclick="leaveRoom()">← 返回房间列表</button></div>
 
 <!-- ============ 大厅 ============ -->
@@ -270,7 +266,7 @@
     <b>接风</b>：出完牌的人如果对方都要不上，<b>队友接风</b>先出（暗打时队伍没明朗，按顺序由下家接）。<br>
     <b>双红十</b>：两张红十不能凑对、不能凑顺，但可以凑三个十。<b>四个十直接赢三家。</b><br>
     <b>亮牌 / 揪牌</b>：发完牌后有红十的可以「亮红十」（同时拿两张就一起亮）；没红十而有「三张一样」的可以「揪」，逼红十玩家亮出来。亮或揪 = 明打，开局翻倍。<br>
-    <b>出牌</b>：每局第一手由抓到 <b>红桃6</b> 的人先出；之后每手由上一手最后出牌的人先出。<br>
+    <b>出牌</b>：首局第一手由抓到 <b>红桃6</b> 的人先出；从第二局起，由上一局获胜方中最先走完的玩家先出。平局时重新由红桃6持有者先出。<br>
     <b>输赢</b>：红十持有者一队，其余人为另一队（一人拿双红十则 1 打 3）。<br>
     &nbsp;&nbsp;· 红十方赢：把红十都走掉（双红十第一个走完即赢）<br>
     &nbsp;&nbsp;· 平局：一张红十走掉、另一张被抓（双红十被人先跑掉两个算平局）<br>
@@ -659,8 +655,9 @@ function renderResult(){
   document.getElementById("rTransfer").innerHTML = r.transfers.length
     ? "💸 转账清单：" + r.transfers.map(t=>names[t["from"]]+" → "+names[t["to"]]+" <b>"+t.amount+" 元</b>").join("　")
     : "本局平局，不用给钱。";
-  document.getElementById("rOrder").textContent = r.out_order.length
-    ? "出完顺序：" + r.out_order.join(" → ") : "";
+  const orderText = r.out_order.length ? "出完顺序：" + r.out_order.join(" → ") : "";
+  const nextText = r.next_leader ? "下一局先手：" + r.next_leader : "下一局先手：重新按红桃6决定";
+  document.getElementById("rOrder").textContent = [orderText, nextText].filter(Boolean).join("　·　");
   document.getElementById("btnResetMoney").style.display = S.is_host ? "inline-block" : "none";
 }
 

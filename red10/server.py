@@ -147,6 +147,8 @@ class Game:
         self.ledger = {}       # pid -> 累计盈亏
         self.result = None
         self.last_round_delta = {}
+        self.next_leader = None       # 上一局赢家，作为下一局先手
+        self.round_leader = None      # 当前局第一手玩家
         self._reset_round()
 
     def _reset_round(self):
@@ -162,6 +164,7 @@ class Game:
         self.jiefeng = None             # 接风提示
         self.out_count = 0
         self.instant = False
+        self.round_leader = None
 
     def _newpid(self):
         while True:
@@ -207,6 +210,7 @@ class Game:
         self.phase = "join"
         self.result = None
         self.last_round_delta = {}
+        self.next_leader = None
         self._reset_round()
         return {"ok": True}
 
@@ -246,13 +250,15 @@ class Game:
             self.p[pid]["choice"] = None
         self.red_holders = [pid for pid in self.order
                             if any(c in RED10 for c in self.p[pid]["hand"])]
-        # 第一手由抓到红桃6的人先出
-        leader = None
-        for pid in self.order:
-            if "H6" in self.p[pid]["hand"]:
-                leader = pid
-                break
-        self.turn = leader or self.order[0]
+        # 首局由红桃6先出；之后由上一局赢家先出。平局则重新按红桃6决定。
+        leader = self.next_leader if self.round_no > 1 and self.next_leader in self.p else None
+        if leader is None:
+            for pid in self.order:
+                if "H6" in self.p[pid]["hand"]:
+                    leader = pid
+                    break
+        self.round_leader = leader or self.order[0]
+        self.turn = self.round_leader
         self.phase = "declare"
         self.result = None
 
@@ -308,6 +314,8 @@ class Game:
         return all(c in self.p[pid]["hand"] for c in RED10)
 
     def _first_leader(self):
+        if self.round_leader in self.p:
+            return self.round_leader
         for pid in self.order:
             if "H6" in self.p[pid]["hand"]:
                 return pid
@@ -517,6 +525,12 @@ class Game:
                      "surrender": "🏳️ 双红十投降"}[kind]
         out_order = sorted([p for p in self.order if self.p[p]["out"]],
                            key=lambda p: self.p[p]["out_order"])
+        if winner in winners:
+            self.next_leader = winner
+        else:
+            ranked_winners = [p for p in out_order if p in winners]
+            self.next_leader = (ranked_winners[0] if ranked_winners else
+                                next((p for p in self.order if p in winners), None))
         self.result = {
             "kind": kind, "text": kind_text,
             "red": red, "civil": civil,
@@ -528,6 +542,7 @@ class Game:
             "declared": self.declared, "bombs": self.bombs,
             "base": self.base, "round_no": self.round_no,
             "out_order": [names[p] for p in out_order],
+            "next_leader": names.get(self.next_leader, ""),
         }
         return {"ok": True, "result": self.result}
 
