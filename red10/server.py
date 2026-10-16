@@ -10,6 +10,7 @@
 单张大小：红10 > 2 > A > K > Q > J > 黑10 > 9 > 8 > 7 > 6
 组合大小：2 > A > K > Q > J > 10(红黑都算普通10) > 9 > ... > 6
 """
+import itertools
 import json
 import os
 import random
@@ -131,6 +132,9 @@ def sort_hand(hand):
     return sorted(hand, key=lambda c: (-single_val(c), c))
 
 
+BOT_NAMES = ["小红", "阿十", "牌牌", "快手", "小北", "豆包"]
+
+
 # ------------------------------------------------------------------ 游戏
 class Game:
     def __init__(self):
@@ -172,6 +176,12 @@ class Game:
             if pid not in self.p:
                 return pid
 
+    def _new_bot_pid(self):
+        while True:
+            pid = "b%04d" % random.randint(1000, 9999)
+            if pid not in self.p:
+                return pid
+
     # ---------- 加入
     def join(self, name, bid):
         name = (name or "").strip()[:10]
@@ -190,10 +200,36 @@ class Game:
             return {"error": "牌局进行中，等这局结束再加入"}
         pid = self._newpid()
         self.p[pid] = {"pid": pid, "name": name, "bid": bid, "hand": [],
-                       "out": False, "out_order": 0, "choice": None, "surrender": False}
+                       "out": False, "out_order": 0, "choice": None,
+                       "surrender": False, "is_bot": False}
         self.order.append(pid)
         self.ledger.setdefault(pid, 0.0)
         return {"pid": pid, "name": name}
+
+    def add_bots(self, pid):
+        """房主一键用机器人补满四人桌。"""
+        if not self.order or self.order[0] != pid:
+            return {"error": "只有房主可以添加机器人"}
+        if self.phase != "join":
+            return {"error": "请在牌局开始前添加机器人"}
+        added = []
+        used = {pl["name"] for pl in self.p.values()}
+        for name in BOT_NAMES:
+            if len(self.order) >= 4:
+                break
+            if name in used:
+                continue
+            bot_pid = self._new_bot_pid()
+            self.p[bot_pid] = {
+                "pid": bot_pid, "name": name, "bid": "", "hand": [],
+                "out": False, "out_order": 0, "choice": None,
+                "surrender": False, "is_bot": True,
+            }
+            self.order.append(bot_pid)
+            self.ledger.setdefault(bot_pid, 0.0)
+            used.add(name)
+            added.append(name)
+        return {"ok": True, "added": added}
 
     def clear_players(self, pid):
         if not self.order or self.order[0] != pid:
@@ -431,6 +467,86 @@ class Game:
     def _advance_turn_after_play(self, pid):
         self.turn = self._next_from(pid)
 
+    # ---------- 机器人
+    def _legal_moves(self, pid):
+        """枚举机器人当前所有合法出牌（每手最多 10 张，至多 1023 个子集）。"""
+        hand = self.p[pid]["hand"]
+        moves = []
+        for n in range(1, len(hand) + 1):
+            for cards in itertools.combinations(hand, n):
+                cb = combo_of(cards)
+                if not cb:
+                    continue
+                if self.last_play and not beats(cb, self.last_play["combo"]):
+                    continue
+                moves.append((list(cards), cb))
+        return moves
+
+    def _bot_declare(self, pid):
+        # 有揪牌条件时积极揪；拿红十时多数暗打，偶尔亮牌增加变化。
+        if self.can_jiu(pid):
+            action = "jiu" if random.random() < 0.7 else "ok"
+        elif self.can_liang(pid):
+            red_count = sum(c in RED10 for c in self.p[pid]["hand"])
+            action = "liang" if red_count == 1 and random.random() < 0.25 else "ok"
+        else:
+            action = "ok"
+        return self.declare(pid, action)
+
+    def _bot_move(self, pid):
+        moves = self._legal_moves(pid)
+        if not moves:
+            return self.do_pass(pid)
+
+        hand = self.p[pid]["hand"]
+        # 能一手走完时直接走，避免机器人错过胜负节点。
+        finish = [m for m in moves if len(m[0]) == len(hand)]
+        if finish:
+            cards, _ = min(finish, key=lambda m: (m[1][0] in BOMB_TYPES, m[1][1]))
+            return self.play(pid, cards)
+
+        if self.last_play:
+            # 明打后不抢队友的牌，除非上面的“一手走完”已经命中。
+            lp = self.last_play["pid"]
+            if self._teams_known() and lp in self._teammates(pid):
+                return self.do_pass(pid)
+            # 跟牌优先用同型最小牌，尽量不浪费炸弹和红十。
+            def follow_key(m):
+                cards, cb = m
+                is_bomb = cb[0] in BOMB_TYPES
+                uses_red = any(c in RED10 for c in cards)
+                return (is_bomb, uses_red, cb[1], len(cards))
+            cards, _ = min(moves, key=follow_key)
+            return self.play(pid, cards)
+
+        # 先手优先多出牌、保留炸弹和红十；同等情况下先出较小的牌。
+        non_bombs = [m for m in moves if m[1][0] not in BOMB_TYPES]
+        pool = non_bombs or moves
+        def lead_key(m):
+            cards, cb = m
+            uses_red = any(c in RED10 for c in cards)
+            return (uses_red, -len(cards), cb[1])
+        cards, _ = min(pool, key=lead_key)
+        return self.play(pid, cards)
+
+    def run_bots(self, max_steps=200):
+        """推进所有当前可行动的机器人，遇到真人操作点或结算即停。"""
+        steps = 0
+        while steps < max_steps:
+            steps += 1
+            if self.phase == "declare":
+                pending = [q for q in self.order
+                           if self.p[q].get("is_bot") and not self.p[q]["choice"]]
+                if not pending:
+                    break
+                self._bot_declare(pending[0])
+                continue
+            if self.phase == "play" and self.turn in self.p and self.p[self.turn].get("is_bot"):
+                self._bot_move(self.turn)
+                continue
+            break
+        return steps
+
     # ---------- 胜负
     def _check_end(self):
         if self.phase != "play" or self.instant:
@@ -591,6 +707,7 @@ class Game:
                 "money": round(self.ledger.get(q, 0.0), 2),
                 "delta": round(self.last_round_delta.get(q, 0.0), 2),
                 "is_me": q == pid,
+                "is_bot": bool(pl.get("is_bot")),
                 "choice": pl["choice"],
             })
         st = {
@@ -705,6 +822,10 @@ def h_clear(g, d):
     return g.clear_players(d.get("pid"))
 
 
+def h_add_bots(g, d):
+    return g.add_bots(d.get("pid"))
+
+
 def h_base(g, d):
     return g.set_base(d.get("pid"), d.get("base"))
 
@@ -740,6 +861,7 @@ def h_abort(g, d):
 ROUTES = {
     "/api/join": h_join,
     "/api/clear": h_clear,
+    "/api/add-bots": h_add_bots,
     "/api/base": h_base,
     "/api/start": h_start,
     "/api/declare": h_declare,
@@ -840,6 +962,8 @@ class Handler(BaseHTTPRequestHandler):
         try:
             with game.lock:
                 res = fn(game, data)
+                if "error" not in res:
+                    game.run_bots()
             if "error" in res:
                 res.setdefault("ok", False)
         except Exception as e:

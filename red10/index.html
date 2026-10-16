@@ -180,6 +180,7 @@
     <div class="hint">底 × 2<sup>倍数</sup>：亮/揪 ×2，每扔一个炸弹再 ×2（双红十也算炸弹）。例：底2 + 亮 + 3个炸弹 = 每人 32 元。</div>
   </div>
   <button id="startBtn" style="display:none" onclick="api('/api/start',{pid:pid}).then(poll)">开始游戏</button>
+  <button id="addBotsBtn" class="ghost" style="display:none" onclick="addBots()">🤖 补满机器人</button>
   <button id="clearBtn" class="warn" style="display:none"
           onclick="if(confirm('确定移除其他成员并清空本房间账目吗？'))api('/api/clear',{pid:pid}).then(poll)">清空其他成员</button>
   <div class="hint" id="lobbyHint" style="margin-top:8px"></div>
@@ -373,6 +374,13 @@ async function join(){
   if(r.pid){ pid = r.pid; localStorage.setItem("hs_pid", pid); sel.clear(); await poll(); }
 }
 function declare(action){ api("/api/declare",{pid:pid, action:action}).then(poll); }
+async function addBots(){
+  const r = await api("/api/add-bots",{pid:pid});
+  if(!r.error){
+    toast(r.added.length ? "已加入 " + r.added.length + " 个机器人" : "座位已经满了");
+    await poll();
+  }
+}
 function saveBase(){
   const v = document.getElementById("baseInput").value;
   savingBase = true;
@@ -537,7 +545,7 @@ function seatHtml(p, big){
   if(p.out) tags += '<span class="tag gray">已走完 第'+p.out_order+'</span>';
   const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.out?" out":"");
   return '<div class="'+cls+'">'
-    + '<div class="nm">'+p.name+(p.is_me?' <span class="tag gray">你</span>':'')+tags+'</div>'
+    + '<div class="nm">'+p.name+(p.is_bot?' <span class="tag gray">🤖 机器人</span>':'')+(p.is_me?' <span class="tag gray">你</span>':'')+tags+'</div>'
     + '<div class="cnt">剩 '+p.count+' 张　累计 '+moneyHtml(p.money)+(p.delta?('　本局 '+moneyHtml(p.delta)):'')+'</div>'
     + '</div>';
 }
@@ -549,13 +557,14 @@ function renderLobby(){
     S.players.map(p=>seatHtml(p)).join("") || '<div class="hint">还没有人加入</div>';
   const n = S.players.length;
   document.getElementById("startBtn").style.display = (S.you && n === 4) ? "inline-block" : "none";
+  document.getElementById("addBotsBtn").style.display = (S.is_host && n < 4) ? "inline-block" : "none";
   document.getElementById("clearBtn").style.display = (S.is_host && n) ? "inline-block" : "none";
   const cfg = document.getElementById("hostCfg");
   cfg.style.display = S.is_host ? "block" : "none";
   if(!savingBase) document.getElementById("baseInput").value = S.base;
   let tip = "";
   if(!S.you) tip = "① 输入名字 → ② 点「加入」（加入后才会出现开始按钮）";
-  else if(n < 4) tip = "已加入 " + n + "/4 人，等满 4 人就可以开始";
+  else if(n < 4) tip = "已加入 " + n + "/4 人；可以等真人，也可以点「补满机器人」立即开玩";
   else tip = "人齐了！任何人点「开始游戏」都会给所有人发牌";
   document.getElementById("joinTip").textContent = tip;
   document.getElementById("lobbyHint").textContent = S.you ? "" : "";
