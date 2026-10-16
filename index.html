@@ -62,6 +62,9 @@
 const buttons=[...document.querySelectorAll('.nav button')];
 const frames=[...document.querySelectorAll('.frame iframe')];
 const isLocal=['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
+// 统一入口每次打开都给三个线上模块一个新的缓存标记，避免外层已更新、
+// 内嵌游戏仍被手机浏览器缓存成旧版本。
+const moduleCacheVersion=Date.now().toString(36);
 function clientId(){
   let id=localStorage.getItem('qipai_client_id');
   if(!id){
@@ -73,6 +76,7 @@ function clientId(){
 function moduleUrl(btn){
   const base=isLocal?`http://localhost:${btn.dataset.port}/`:(btn.dataset.online||btn.dataset.path);
   const url=new URL(base,location.href);
+  if(!isLocal) url.searchParams.set('v',moduleCacheVersion);
   url.hash='client='+encodeURIComponent(clientId());
   return url.href;
 }
