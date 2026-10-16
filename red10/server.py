@@ -937,6 +937,14 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 self._send(404, "not found", "text/plain; charset=utf-8")
             return
+        if u.path in ("/hand-back.png", "/hand-front.png"):
+            filename = "图层 1.png" if u.path == "/hand-back.png" else "图层 2.png"
+            try:
+                with open(os.path.join(HERE, "..", "image", filename), "rb") as f:
+                    self._send(200, f.read(), "image/png")
+            except OSError:
+                self._send(404, "not found", "text/plain; charset=utf-8")
+            return
         if u.path == "/api/rooms":
             q = parse_qs(u.query)
             self._send(200, json.dumps({"rooms": room_list((q.get("bid") or [""])[0])}, ensure_ascii=False))

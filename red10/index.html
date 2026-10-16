@@ -44,6 +44,20 @@
   .card.reorder-picked{transform:translateY(-8px);border-color:var(--gold);box-shadow:0 0 0 2px rgba(197,138,18,.28),0 3px 9px rgba(0,0,0,.16)}
   .card.sel{transform:translateY(-12px);border-color:var(--blue);box-shadow:0 0 0 2px rgba(47,111,237,.28),0 3px 9px rgba(0,0,0,.16)}
   .hand{display:flex;flex-wrap:wrap;align-items:flex-end;min-height:96px;padding:12px 6px 4px}
+  .hand-stage{position:relative;width:min(100%,560px);height:495px;margin:4px auto 0;overflow:hidden;isolation:isolate}
+  .hand-stage>.hand-art{position:absolute;pointer-events:none;user-select:none;-webkit-user-drag:none}
+  .hand-stage>.hand-back{z-index:1;top:275px;left:21%;width:58%}
+  .hand-stage>.hand-front{z-index:20;top:275px;left:43.24%;width:20.27%}
+  .hand-stage>.hand{position:absolute;z-index:3;inset:0;display:block;min-height:0;padding:0;overflow:visible}
+  .hand-row{position:absolute;left:50%;width:96%;display:flex;justify-content:center;align-items:flex-end;transform:translateX(-50%)}
+  .hand-stage .card.big{width:124px;height:176px;font-size:40px;margin:3px 0}
+  .hand-row .card{justify-content:flex-start;padding-top:14px}
+  .hand-row .card:not(:first-child){margin-left:-22px}
+  .hand-row .card{transform:translateY(var(--fan-y,0px)) rotate(var(--fan,0deg));transform-origin:50% 115%;transition:transform .16s ease,box-shadow .16s ease}
+  .hand-row .card.sel{transform:translateY(calc(var(--fan-y,0px) - 15px)) rotate(var(--fan,0deg))}
+  .hand-row .card.reorder-picked{transform:translateY(calc(var(--fan-y,0px) - 11px)) rotate(var(--fan,0deg))}
+  .hand-row.drop-row:after{content:"放到这一层";position:absolute;left:50%;top:-15px;transform:translateX(-50%);padding:1px 8px;border-radius:10px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;white-space:nowrap}
+  .hand-card.direct-draggable{touch-action:none;cursor:grab}.hand-card.direct-draggable:active{cursor:grabbing}
   .hand-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px}
   .hand-head .hint{flex:1;min-width:240px}
   .hand-tools{display:flex;gap:5px;flex-wrap:wrap}
@@ -120,7 +134,7 @@
     .board .lbl{font-weight:800;letter-spacing:.08em;color:#65736b;text-transform:uppercase}
     .history-panel{position:relative}
   }
-  @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}#dReorderBtn,#pReorderBtn{display:none}.hand-tools{grid-template-columns:1fr!important}.mobile-hand-tip{display:inline!important}}
+  @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}#dReorderBtn,#pReorderBtn{display:none}.hand-tools{grid-template-columns:1fr 1fr!important}.mobile-hand-tip{display:inline!important}.hand-stage{height:435px}.hand-stage>.hand-back,.hand-stage>.hand-front{top:235px}.hand-stage .card.big{width:92px;height:132px;font-size:32px}.hand-row .card{margin-left:-24px}.hand-row .card:first-child{margin-left:0}}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
          padding:9px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
   #toast.show{opacity:.93}
@@ -141,7 +155,7 @@
     .board{position:relative;min-height:112px;margin:9px -3px 8px;padding:12px;border:1px solid rgba(151,181,244,.2);border-radius:50% / 18%;background:radial-gradient(ellipse at center,#294a87 0,#192f5c 58%,#0e1c38 100%);box-shadow:inset 0 0 38px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.22)}.board .lbl{color:#afbddc;text-align:center}.trickline{text-align:center;color:#eef3ff}
     .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.history-panel{background:rgba(255,255,255,.04);border-color:rgba(138,197,165,.14)}.history-title{color:#d3e3d9}.trick-history{grid-template-columns:1fr}.trickline{background:rgba(1,9,5,.22);border-color:rgba(138,197,165,.12);color:#eef6f0}.trickline.latest{background:rgba(73,177,120,.14);border-color:rgba(111,207,157,.35)}.trick-action{color:#b9cbbf}.recommend-info{color:#9fe0bd}
     .hand-head{margin-top:8px;display:block}.hand-head>.hint{font-size:11px;line-height:1.45;text-align:center;min-width:0}.hand-tools{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 2px}.hand-tools button{min-height:38px;padding:7px 8px;font-size:12px}
-    .hand{min-height:102px;flex-wrap:nowrap;justify-content:center;align-items:flex-end;padding:20px 0 6px;overflow:visible}.hand .card{width:50px;height:72px;margin:0 0 0 -17px;border-radius:8px;flex:0 0 50px;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.28)}.hand .card:first-child{margin-left:0}.hand .card.sel{transform:translateY(-16px)}.hand .card.reorder-picked{transform:translateY(-11px)}
+    .hand{min-height:102px;flex-wrap:nowrap;justify-content:center;align-items:flex-end;padding:20px 0 6px;overflow:visible}.hand .card{width:50px;height:72px;margin:0 0 0 -17px;border-radius:8px;flex:0 0 50px;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.28)}.hand .card:first-child{margin-left:0}.hand-row .card.sel{transform:translateY(calc(var(--fan-y,0px) - 16px)) rotate(var(--fan,0deg))}.hand-row .card.reorder-picked{transform:translateY(calc(var(--fan-y,0px) - 11px)) rotate(var(--fan,0deg))}
     .card{background:linear-gradient(145deg,#fffdf7,#eee8db);border-color:#d4cbbb;color:#111}.card small{color:#6e6a63}.card.big{width:54px;height:78px;flex-basis:54px}.card.sm{width:35px;height:50px;flex-basis:35px}#play,#declare{overflow:hidden}
     details.rules{padding:4px 5px}details.rules summary{color:#a5b2d0}details.rules div{color:#cbd4eb}.guide-card{background:rgba(255,255,255,.045);border-color:rgba(166,187,240,.11)}.guide-card p{color:#c1cbe2}.strategy-note{background:rgba(126,161,255,.09);border-color:rgba(126,161,255,.27);color:#c8d7ff}.rule-table th,.rule-table td,.tbl th,.tbl td{border-color:rgba(166,187,240,.11)}
     #abortBtn{left:10px!important;right:10px!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;width:calc(100% - 20px);margin:0!important;z-index:60;backdrop-filter:blur(14px)}
@@ -183,6 +197,8 @@
     .hand .card.sel,.card.reorder-picked{box-shadow:0 0 0 2px #72d2a2,0 10px 22px rgba(35,137,83,.38),inset 0 1px #fff}
     details.rules{border-color:rgba(137,196,164,.1)}details.rules summary{color:#9fb7a9}details.rules div{color:#c7d6cd}.strategy-note{background:rgba(83,183,128,.09);border-color:rgba(83,183,128,.25);color:#c3e3d1}.guide-card{border-color:rgba(137,196,164,.1)}
   }
+  @media(max-width:900px){.hand-head .hint{flex:1 0 100%}.hand-tools{width:100%}}
+  @media(max-width:680px){.hand-row .card{margin-left:-24px;padding-top:10px}.hand-row .card:first-child{margin-left:0}.hand-tools button{width:100%;margin:0}}
 </style>
 </head>
 <body>
@@ -233,10 +249,10 @@
   <div class="round-alerts" id="declareAlerts"></div>
   <div class="hint"><b>出牌前先准备：</b>有红十可选择亮或不亮，有三张/四张炸弹可选择揪或不揪。你的可选项只显示在自己屏幕上，其他人只能看到“准备中 / 已准备”。</div>
   <div class="hand-head">
-    <div class="hint">手牌只在你这台设备保存排序，不影响牌局；电脑版可拖牌或点两张交换。<span class="mobile-hand-tip" style="display:none">手机版点牌只会选择，不会交换。</span></div>
-    <div class="hand-tools"><button class="ghost" id="dReorderBtn" onclick="toggleReorder()">↔ 调整牌序</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
+    <div class="hint">拖动牌到任意一层调整位置；轻点是选牌。点击自动理牌会排成三层。</div>
+    <div class="hand-tools"><button class="ghost" id="dReorderBtn" onclick="toggleReorder()">↔ 点两张交换</button><button class="ghost" onclick="autoSort()">自动理牌</button><button class="ghost" id="dLayerBtn" onclick="cycleHandLayers()">牌层：2 层</button></div>
   </div>
-  <div class="hand" id="dHand"></div>
+  <div class="hand-stage"><img class="hand-art hand-back" src="/hand-back.png" alt=""><div class="hand" id="dHand"></div><img class="hand-art hand-front" src="/hand-front.png" alt=""></div>
   <div style="margin-top:8px">
     <button id="btnLiang" class="liang" onclick="declare('liang')">🔴 亮红十</button>
     <button id="btnJiu" class="jiu" onclick="declare('jiu')">🔍 揪牌</button>
@@ -267,10 +283,10 @@
   </div>
 
   <div class="hand-head">
-    <div class="hint">轮到你时，点牌选中 → 出牌；管不上就「不要」。<span class="mobile-hand-tip" style="display:none">手机版点牌直接选牌。</span><span id="reorderHint"></span></div>
-    <div class="hand-tools"><button class="ghost" id="pReorderBtn" onclick="toggleReorder()">↔ 调整牌序</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
+    <div class="hint">轻点选牌，拖到任意一层可换位置；自动理牌会排成三层。<span id="reorderHint"></span></div>
+    <div class="hand-tools"><button class="ghost" id="pReorderBtn" onclick="toggleReorder()">↔ 点两张交换</button><button class="ghost" onclick="autoSort()">自动理牌</button><button class="ghost" id="pLayerBtn" onclick="cycleHandLayers()">牌层：2 层</button></div>
   </div>
-  <div class="hand" id="pHand"></div>
+  <div class="hand-stage"><img class="hand-art hand-back" src="/hand-back.png" alt=""><div class="hand" id="pHand"></div><img class="hand-art hand-front" src="/hand-front.png" alt=""></div>
   <div id="selInfo" class="hint" style="margin-top:2px"></div>
   <div id="recommendInfo" class="recommend-info"></div>
   <div style="margin-top:8px">
@@ -344,7 +360,9 @@ let handOrder = [];
 let handOrderKey = "";
 let reorderMode = false;
 let reorderPick = null;
-let draggedIndex = null;
+let handLayers = Math.max(1, Math.min(3, Number(localStorage.getItem("hs_hand_layers") || 2)));
+let pointerDrag = null;
+let ignoreCardClickUntil = 0;
 let lastRenderedPhase = "";
 let recommendText = "";
 let recommendFor = "";
@@ -459,9 +477,10 @@ function autoSort(){
     return d || a.localeCompare(b);
   });
   reorderPick = null;
+  setHandLayers(3);
   saveHandOrder();
   render();
-  toast("已按牌力排序");
+  toast("已自动理牌，并分成 3 层");
 }
 function mobileHandMode(){
   return window.innerWidth <= 680 || window.matchMedia("(pointer: coarse)").matches;
@@ -471,7 +490,7 @@ function toggleReorder(){
     reorderMode = false;
     reorderPick = null;
     render();
-    return toast("手机版点牌直接选择；需要整理请用自动理牌");
+    return toast("手机版可直接拖动牌换位置");
   }
   reorderMode = !reorderMode;
   reorderPick = null;
@@ -479,25 +498,62 @@ function toggleReorder(){
   render();
 }
 function updateReorderControls(){
-  const text = reorderMode ? "✓ 完成理牌" : "↔ 调整牌序";
+  const text = reorderMode ? "✓ 完成交换" : "↔ 点两张交换";
   ["dReorderBtn","pReorderBtn"].forEach(id=>{
     const el = document.getElementById(id); if(el) el.textContent = text;
   });
   const hint = document.getElementById("reorderHint");
-  if(hint) hint.textContent = reorderMode ? "　调整模式：拖动，或点两张牌交换位置。" : "";
+  if(hint) hint.textContent = reorderMode ? "　点两张牌交换；也可以随时直接拖动。" : "";
 }
-function handCardHtml(c, i, pick){
+function setHandLayers(n){
+  handLayers = Math.max(1, Math.min(3, Number(n) || 1));
+  localStorage.setItem("hs_hand_layers", String(handLayers));
+  updateHandLayerControls();
+}
+function cycleHandLayers(){
+  setHandLayers(handLayers % 3 + 1);
+  render();
+  toast("已切换为 " + handLayers + " 层牌");
+}
+function updateHandLayerControls(){
+  ["dLayerBtn","pLayerBtn"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = "牌层：" + handLayers + " 层";
+  });
+}
+function handCardHtml(c, i, pick, fan, fanY){
   const chosen = reorderMode && reorderPick === i ? " reorder-picked" : "";
-  const canReorder = reorderMode && !mobileHandMode();
-  const classes = (pick ? "pick " : "") + "hand-card" + (canReorder ? " reorderable" : "") + chosen;
-  return cardHtml(c, classes, true).replace('data-c="'+c+'"', 'data-c="'+c+'" data-hand-index="'+i+'"'+(canReorder?' draggable="true"':''));
+  const classes = (pick ? "pick " : "") + "hand-card direct-draggable" + chosen;
+  return cardHtml(c, classes, true).replace('data-c="'+c+'"', 'style="--fan:'+fan+'deg;--fan-y:'+fanY+'px" data-c="'+c+'" data-hand-index="'+i+'"');
 }
 function renderHand(id, pick){
   const el = document.getElementById(id);
   if(!el || !S || !S.hand) return;
+  if(pointerDrag && pointerDrag.dragging && pointerDrag.rootId === id) return;
   const cards = syncHandOrder(S.hand);
-  el.innerHTML = cards.map((c,i)=>handCardHtml(c,i,pick)).join("");
+  const layers = Math.max(1, Math.min(handLayers, cards.length || 1));
+  const rowTops = (mobileHandMode()
+    ? {1:[140], 2:[102,160], 3:[75,130,185]}
+    : {1:[175], 2:[122,195], 3:[85,160,235]})[layers];
+  const base = Math.floor(cards.length / layers);
+  const extra = cards.length % layers;
+  let index = 0;
+  const rows = [];
+  for(let row=0; row<layers; row++){
+    const count = base + (row < extra ? 1 : 0);
+    const startIndex = index;
+    const rowCards = [];
+    for(let col=0; col<count; col++){
+      const fan = (col - (count - 1) / 2) * Math.min(4.2, 16 / Math.max(1, count - 1));
+      rowCards.push(handCardHtml(cards[index], index, pick, fan.toFixed(2), (Math.abs(fan)*0.5).toFixed(1)));
+      index++;
+    }
+    rows.push('<div class="hand-row" data-row="'+row+'" data-start-index="'+startIndex+'" data-end-index="'+(index-1)+'" style="top:'+rowTops[row]+'px;z-index:'+(3+row)+'">'+rowCards.join("")+'</div>');
+  }
+  el.className = "hand layers-" + layers;
+  el.innerHTML = rows.join("");
   updateReorderControls();
+  updateHandLayerControls();
 }
 
 function cardHtml(code, extra, big){
@@ -832,6 +888,7 @@ async function poll(){
 document.addEventListener("click", function(e){
   const el = e.target.closest(".hand-card");
   if(!el) return;
+  if(Date.now() < ignoreCardClickUntil){ e.preventDefault(); return; }
   const c = el.getAttribute("data-c");
   const index = Number(el.getAttribute("data-hand-index"));
   if(reorderMode && !mobileHandMode()){
@@ -862,39 +919,66 @@ document.addEventListener("click", function(e){
   renderPlay();
 });
 
-document.addEventListener("dragstart", function(e){
+document.addEventListener("pointerdown", function(e){
   const el = e.target.closest(".hand-card");
-  if(!el) return;
-  if(!reorderMode || mobileHandMode()){ e.preventDefault(); return; }
-  draggedIndex = Number(el.getAttribute("data-hand-index"));
-  el.classList.add("dragging");
-  if(e.dataTransfer){ e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", String(draggedIndex)); }
+  if(!el || e.button !== 0) return;
+  pointerDrag = {
+    pointerId:e.pointerId,
+    startX:e.clientX,
+    startY:e.clientY,
+    from:Number(el.getAttribute("data-hand-index")),
+    target:Number(el.getAttribute("data-hand-index")),
+    rootId:el.closest(".hand").id,
+    el:el,
+    dragging:false
+  };
 });
-document.addEventListener("dragover", function(e){
-  const el = e.target.closest(".hand-card");
-  if(!el || !reorderMode || mobileHandMode()) return;
+document.addEventListener("pointermove", function(e){
+  if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+  const dx=e.clientX-pointerDrag.startX, dy=e.clientY-pointerDrag.startY;
+  if(!pointerDrag.dragging && Math.hypot(dx,dy) < 10) return;
+  if(!pointerDrag.dragging){
+    pointerDrag.dragging = true;
+    pointerDrag.el.classList.add("dragging");
+    ignoreCardClickUntil = Date.now() + 600;
+    try{ pointerDrag.el.setPointerCapture(e.pointerId); }catch(_e){}
+  }
   e.preventDefault();
-  document.querySelectorAll(".drop-target").forEach(x=>x.classList.remove("drop-target"));
-  if(Number(el.getAttribute("data-hand-index")) !== draggedIndex) el.classList.add("drop-target");
+  const hit = document.elementFromPoint(e.clientX,e.clientY);
+  const el = hit && hit.closest ? hit.closest(".hand-card") : null;
+  const row = hit && hit.closest ? hit.closest(".hand-row") : null;
+  document.querySelectorAll(".drop-target,.drop-row").forEach(x=>x.classList.remove("drop-target","drop-row"));
+  if(el){
+    const index = Number(el.getAttribute("data-hand-index"));
+    pointerDrag.target = index;
+    if(index !== pointerDrag.from) el.classList.add("drop-target");
+    if(row) row.classList.add("drop-row");
+  }else if(row){
+    const rect = row.getBoundingClientRect();
+    const start = Number(row.getAttribute("data-start-index"));
+    const end = Number(row.getAttribute("data-end-index"));
+    const ratio = Math.max(0, Math.min(.999, (e.clientX-rect.left)/Math.max(1,rect.width)));
+    pointerDrag.target = Math.min(end, start + Math.floor(ratio * (end-start+1)));
+    row.classList.add("drop-row");
+  }
 });
-document.addEventListener("drop", function(e){
-  const el = e.target.closest(".hand-card");
-  if(!el || draggedIndex === null || !reorderMode || mobileHandMode()) return;
-  e.preventDefault();
-  const targetIndex = Number(el.getAttribute("data-hand-index"));
-  if(targetIndex !== draggedIndex){
-    const moving = handOrder.splice(draggedIndex, 1)[0];
+function finishPointerDrag(e){
+  if(!pointerDrag || e.pointerId !== pointerDrag.pointerId) return;
+  const wasDragging = pointerDrag.dragging;
+  const from = pointerDrag.from;
+  const targetIndex = pointerDrag.target;
+  document.querySelectorAll(".dragging,.drop-target,.drop-row").forEach(x=>x.classList.remove("dragging","drop-target","drop-row"));
+  pointerDrag = null;
+  if(wasDragging && targetIndex !== from){
+    const moving = handOrder.splice(from, 1)[0];
     handOrder.splice(targetIndex, 0, moving);
     saveHandOrder();
     render();
     toast("已调整牌序");
   }
-  draggedIndex = null;
-});
-document.addEventListener("dragend", function(e){
-  document.querySelectorAll(".dragging,.drop-target").forEach(x=>x.classList.remove("dragging","drop-target"));
-  draggedIndex = null;
-});
+}
+document.addEventListener("pointerup", finishPointerDrag);
+document.addEventListener("pointercancel", finishPointerDrag);
 
 async function doPlay(){
   const arr = Array.from(sel);
