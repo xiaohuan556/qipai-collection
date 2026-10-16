@@ -758,6 +758,7 @@ class Game:
         }
         if self.last_play:
             st["last_play"] = {
+                "pid": self.last_play["pid"],
                 "name": self.p[self.last_play["pid"]]["name"],
                 "cards": self.last_play["cards"],
                 "type": TYPE_NAME[self.last_play["combo"][0]],

@@ -79,8 +79,15 @@
   .last-play-card{display:flex;align-items:center;gap:12px;min-height:68px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #dce2dd}
   .last-player{display:inline-flex;align-items:center;align-self:stretch;min-width:96px;justify-content:center;padding:7px 12px;border-radius:8px;background:#174f36;color:#fff;font-size:16px;font-weight:900}
   .last-play-detail{font-size:14px;color:#303833}.last-play-detail b{font-size:16px}
-  .trick-history{margin-top:8px;padding-top:7px;border-top:1px solid #e4e8e5}
-  .trick-history-title{font-size:11px;color:var(--sub);margin-bottom:2px}
+  .history-panel{margin-top:12px;padding:10px 12px;border:1px solid #dce2dd;border-radius:10px;background:#f6f9f7}
+  .history-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font-size:13px;font-weight:900;color:#425047}
+  .history-title small{font-size:11px;font-weight:500;color:var(--sub)}
+  .trick-history{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .trickline{display:flex;align-items:center;gap:5px;min-height:34px;padding:5px 8px;border:1px solid #e0e5e1;border-radius:8px;background:#fff}
+  .trickline.latest{border-color:#3b8c62;background:#eaf7f0;box-shadow:0 0 0 2px rgba(59,140,98,.1)}
+  .trick-who{font-weight:800;white-space:nowrap}.trick-action{color:#57635c}
+  .recommend-info{min-height:24px;margin-top:6px;color:#276442;font-size:13px;font-weight:800}
+  button.recommended{box-shadow:0 0 0 3px rgba(42,157,63,.22),0 5px 14px rgba(42,157,63,.18)}
   .round-alerts{display:grid;gap:7px;margin:8px 0}
   .jiu-alert{display:flex;align-items:center;gap:10px;padding:9px 12px;border:2px solid #8052c2;border-radius:10px;background:#f5efff;color:#442172;font-weight:700}
   .jiu-alert strong{font-size:16px;color:#32145d}.jiu-alert .cards{white-space:nowrap}
@@ -111,6 +118,7 @@
     #pTurn{display:none}
     .board{padding:13px 14px;border-style:solid;background:#f6f9f7}
     .board .lbl{font-weight:800;letter-spacing:.08em;color:#65736b;text-transform:uppercase}
+    .history-panel{position:relative}
   }
   @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
@@ -131,7 +139,7 @@
     .turn-banner{margin:8px 0;padding:8px 10px;gap:7px;border-radius:11px;background:rgba(89,178,130,.16);border:1px solid rgba(111,207,157,.34);box-shadow:none}.turn-banner.my-turn{background:rgba(108,157,255,.16);box-shadow:none}.turn-banner .turn-name{font-size:16px}.turn-banner .turn-label,.turn-banner .turn-action{font-size:11px}.tag.turn-tag{background:rgba(107,206,154,.2);border-color:rgba(111,207,157,.4);color:#bce8cf}
     .seat.red-revealed{background:linear-gradient(145deg,rgba(211,64,72,.25),rgba(101,27,42,.18));border-color:#f06f75;box-shadow:0 0 0 2px rgba(240,111,117,.12),0 0 24px rgba(184,42,57,.17)}.tag.red-player{background:#d7434b;border-color:#ef747a}.tag.jiu-tag{background:#7853b8;border-color:#9d7bd7}.jiu-alert{display:block;text-align:center;background:rgba(119,78,178,.16);border-color:rgba(163,125,218,.45);color:#e5d5ff}.jiu-alert strong{color:#f2e9ff}.jiu-alert .cards{display:block;margin-top:4px}
     .board{position:relative;min-height:112px;margin:9px -3px 8px;padding:12px;border:1px solid rgba(151,181,244,.2);border-radius:50% / 18%;background:radial-gradient(ellipse at center,#294a87 0,#192f5c 58%,#0e1c38 100%);box-shadow:inset 0 0 38px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.22)}.board .lbl{color:#afbddc;text-align:center}.trickline{text-align:center;color:#eef3ff}
-    .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.trick-history{border-color:rgba(255,255,255,.12)}
+    .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.history-panel{background:rgba(255,255,255,.04);border-color:rgba(138,197,165,.14)}.history-title{color:#d3e3d9}.trick-history{grid-template-columns:1fr}.trickline{background:rgba(1,9,5,.22);border-color:rgba(138,197,165,.12);color:#eef6f0}.trickline.latest{background:rgba(73,177,120,.14);border-color:rgba(111,207,157,.35)}.trick-action{color:#b9cbbf}.recommend-info{color:#9fe0bd}
     .hand-head{margin-top:8px;display:block}.hand-head>.hint{font-size:11px;line-height:1.45;text-align:center;min-width:0}.hand-tools{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 2px}.hand-tools button{min-height:38px;padding:7px 8px;font-size:12px}
     .hand{min-height:102px;flex-wrap:nowrap;justify-content:center;align-items:flex-end;padding:20px 0 6px;overflow:visible}.hand .card{width:50px;height:72px;margin:0 0 0 -17px;border-radius:8px;flex:0 0 50px;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.28)}.hand .card:first-child{margin-left:0}.hand .card.sel{transform:translateY(-16px)}.hand .card.reorder-picked{transform:translateY(-11px)}
     .card{background:linear-gradient(145deg,#fffdf7,#eee8db);border-color:#d4cbbb;color:#111}.card small{color:#6e6a63}.card.big{width:54px;height:78px;flex-basis:54px}.card.sm{width:35px;height:50px;flex-basis:35px}#play,#declare{overflow:hidden}
@@ -256,7 +264,6 @@
     <div class="lbl">桌面上（上一手）</div>
     <div id="lastPlay"></div>
     <div id="jiefengLine" style="color:#c58a12;font-weight:700;font-size:13px;margin:2px 0"></div>
-    <div id="trickList"></div>
   </div>
 
   <div class="hand-head">
@@ -265,11 +272,14 @@
   </div>
   <div class="hand" id="pHand"></div>
   <div id="selInfo" class="hint" style="margin-top:2px"></div>
+  <div id="recommendInfo" class="recommend-info"></div>
   <div style="margin-top:8px">
+    <button id="btnRecommend" class="ghost" onclick="smartRecommend()">✨ 智能推荐</button>
     <button id="btnPlay" onclick="doPlay()">出牌</button>
     <button id="btnPass" class="ghost" onclick="doPass()">不要</button>
-    <button class="ghost" onclick="sel.clear();render()">清空选择</button>
+    <button class="ghost" onclick="clearSelection()">清空选择</button>
   </div>
+  <div class="history-panel"><div class="history-title"><span>本轮出牌记录</span><small>最新一条已高亮</small></div><div id="trickList"></div></div>
 </div>
 
 <!-- ============ 结果 ============ -->
@@ -335,6 +345,8 @@ let handOrderKey = "";
 let reorderMode = false;
 let reorderPick = null;
 let draggedIndex = null;
+let recommendText = "";
+let recommendFor = "";
 
 const SUIT = { S:"♠", H:"♥", C:"♣", D:"♦", X:"🃏" };
 const RED10 = ["H10","D10"];
@@ -384,7 +396,7 @@ async function createRoom(){
   room=r.room; pid=r.pid; localStorage.setItem('hs_room',room); localStorage.setItem('hs_pid',pid); S=null; poll();
 }
 function openRoom(id, ownerPid){ room=id; pid=ownerPid||''; S=null; localStorage.setItem('hs_room',room); if(pid)localStorage.setItem('hs_pid',pid);else localStorage.removeItem('hs_pid'); poll(); }
-function leaveRoom(){ room=''; pid=''; S=null; sel.clear(); localStorage.removeItem('hs_room'); localStorage.removeItem('hs_pid'); renderRoomGate(); pollRooms(); }
+function leaveRoom(){ room=''; pid=''; S=null; sel.clear(); clearRecommendation(); localStorage.removeItem('hs_room'); localStorage.removeItem('hs_pid'); renderRoomGate(); pollRooms(); }
 async function deleteOwnedRoom(roomId){
   if(!confirm('确定永久删除这个房间吗？房内所有玩家都会退出，当前牌局和账目无法恢复。')) return;
   const r=await (await fetch('/api/delete-room',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:roomId,bid:browserId()})})).json();
@@ -535,6 +547,7 @@ const BOMB_BEATS = {
   quad:["single","pair","straight","pairchain","triple"],
   shuanghong:["single","pair","straight","pairchain","triple","quad"]
 };
+const BOMB_TYPES_JS = ["triple","quad","shuanghong"];
 function beats(a,b){
   if(a.t===b.t){
     if(a.t==="straight"||a.t==="pairchain") return a.n===b.n && a.v>b.v;
@@ -543,6 +556,65 @@ function beats(a,b){
   }
   if(b.t==="shuanghong") return false;
   return (BOMB_BEATS[a.t]||[]).indexOf(b.t)>=0;
+}
+function compareKey(a,b){
+  for(let i=0;i<Math.max(a.length,b.length);i++){
+    const d=(a[i]||0)-(b[i]||0); if(d) return d;
+  }
+  return 0;
+}
+function recommendStateKey(){
+  if(!S) return "";
+  return [S.round_no,S.turn,(S.hand||[]).join(","),S.last_play?(S.last_play.pid+":"+S.last_play.cards.join(",")):"lead"].join("|");
+}
+function clearRecommendation(){
+  recommendText=""; recommendFor="";
+}
+function clearSelection(){
+  sel.clear(); clearRecommendation(); render();
+}
+function smartRecommend(){
+  if(!S || !S.is_turn) return toast("还没轮到你");
+  const hand=(S.hand||[]).slice();
+  const current=S.last_play?comboOf(S.last_play.cards):null;
+  const moves=[];
+  for(let mask=1;mask<(1<<hand.length);mask++){
+    const cards=[];
+    for(let i=0;i<hand.length;i++) if(mask&(1<<i)) cards.push(hand[i]);
+    const cb=comboOf(cards);
+    if(cb && (!current || beats(cb,current))) moves.push({cards:cards,cb:cb});
+  }
+  const finishes=moves.filter(m=>m.cards.length===hand.length);
+  let best=null;
+  if(finishes.length){
+    best=finishes.sort((a,b)=>compareKey(
+      [BOMB_TYPES_JS.indexOf(a.cb.t)>=0?1:0,a.cb.v],
+      [BOMB_TYPES_JS.indexOf(b.cb.t)>=0?1:0,b.cb.v]))[0];
+  }
+  if(!best && current && S.teams_known && S.last_play && S.last_play.pid){
+    const me=S.players.find(p=>p.is_me), last=S.players.find(p=>p.pid===S.last_play.pid);
+    if(me && last && Boolean(me.red_shown)===Boolean(last.red_shown)){
+      sel.clear(); recommendText="建议：不要（队友正在出牌，给队友让牌）"; recommendFor=recommendStateKey(); renderPlay(); return;
+    }
+  }
+  if(!best && moves.length){
+    best=moves.sort((a,b)=>{
+      const ak=current
+        ? [BOMB_TYPES_JS.indexOf(a.cb.t)>=0?1:0,a.cards.some(c=>RED10.indexOf(c)>=0)?1:0,a.cb.v,a.cards.length]
+        : [a.cards.some(c=>RED10.indexOf(c)>=0)?1:0,BOMB_TYPES_JS.indexOf(a.cb.t)>=0?1:0,-a.cards.length,a.cb.v];
+      const bk=current
+        ? [BOMB_TYPES_JS.indexOf(b.cb.t)>=0?1:0,b.cards.some(c=>RED10.indexOf(c)>=0)?1:0,b.cb.v,b.cards.length]
+        : [b.cards.some(c=>RED10.indexOf(c)>=0)?1:0,BOMB_TYPES_JS.indexOf(b.cb.t)>=0?1:0,-b.cards.length,b.cb.v];
+      return compareKey(ak,bk);
+    })[0];
+  }
+  recommendFor=recommendStateKey();
+  if(!best){
+    sel.clear(); recommendText="建议：不要（没有能管上的牌）"; renderPlay(); return;
+  }
+  sel=new Set(best.cards);
+  recommendText="建议出："+best.cb.label+" · "+best.cards.length+" 张（已替你选中）";
+  renderPlay();
 }
 
 /* ---------------- 渲染 ---------------- */
@@ -638,6 +710,8 @@ function renderDeclare(){
 }
 
 function renderPlay(){
+  const recKey=recommendStateKey();
+  if(recommendFor && recommendFor!==recKey) clearRecommendation();
   document.getElementById("pRound").textContent = S.round_no;
   document.getElementById("pBase").textContent = S.base;
   const de = document.getElementById("pDeclared");
@@ -662,12 +736,9 @@ function renderPlay(){
     ? ("🔁 " + S.jiefeng.by + " 出完了" + (S.jiefeng.kind === "mate" ? "，队友 " : "，下家 ") + S.jiefeng.to + " 接风先出")
     : "";
   const history = S.trick.slice();
-  if(S.last_play){
-    for(let i=history.length-1;i>=0;i--){ if(!history[i].pass){ history.splice(i,1); break; } }
-  }
   document.getElementById("trickList").innerHTML = history.length
-    ? '<div class="trick-history"><div class="trick-history-title">本轮较早记录</div>'+history.map(t=>'<div class="trickline">'+escRoom(t.name)+'：'+(t.pass?'<span style="color:#999">不要</span>':t.type+' '+t.cards.map(c=>cardHtml(c,"sm")).join(""))+'</div>').join("")+'</div>'
-    : "";
+    ? '<div class="trick-history">'+history.map((t,i)=>'<div class="trickline'+(i===history.length-1?' latest':'')+'"><span class="trick-who">'+escRoom(t.name)+'</span><span class="trick-action">'+(t.pass?'不要':t.type)+'</span>'+(t.pass?'':t.cards.map(c=>cardHtml(c,"sm")).join(""))+'</div>').join("")+'</div>'
+    : '<div class="hint">本轮还没有出牌记录</div>';
 
   renderHand("pHand", true);
   document.querySelectorAll("#pHand .hand-card").forEach(el=>{
@@ -687,11 +758,15 @@ function renderPlay(){
     }
   }
   document.getElementById("selInfo").textContent = info;
+  document.getElementById("recommendInfo").textContent = recommendText;
 
   const my = S.is_turn;
+  document.getElementById("btnRecommend").disabled = !my;
   document.getElementById("btnPlay").disabled = !my;
   document.getElementById("btnPass").disabled = !my || S.must_play;
   document.getElementById("btnPass").textContent = (my && S.must_play) ? "你先出（必须出牌）" : "不要";
+  document.getElementById("btnPlay").classList.toggle("recommended",!!recommendText && recommendText.indexOf("建议出")===0);
+  document.getElementById("btnPass").classList.toggle("recommended",!!recommendText && recommendText.indexOf("建议：不要")===0);
 }
 
 function renderResult(){
@@ -730,7 +805,7 @@ async function poll(){
     if(myPid !== pid) return;                       // 丢弃过期响应
     if(st.room_missing){ leaveRoom(); return; }
     if(st.you === null && pid){ pid = ""; localStorage.removeItem("hs_pid"); }
-    if(st.round_no !== lastRound){ lastRound = st.round_no; sel.clear(); handOrderKey = ""; reorderPick = null; reorderMode = false; }
+    if(st.round_no !== lastRound){ lastRound = st.round_no; sel.clear(); clearRecommendation(); handOrderKey = ""; reorderPick = null; reorderMode = false; }
     S = st; render();
   }catch(e){}
 }
@@ -762,9 +837,10 @@ document.addEventListener("click", function(e){
   }
   if(!el.classList.contains("pick")) return;
   if(sel.has(c)) sel.delete(c); else {
-    if(sel.size >= 9) return toast("一次最多出 9 张");
+    if(sel.size >= 10) return toast("一次最多出 10 张");
     sel.add(c);
   }
+  clearRecommendation();
   renderPlay();
 });
 
@@ -805,11 +881,11 @@ async function doPlay(){
   const arr = Array.from(sel);
   if(!arr.length) return toast("先点牌选中");
   const r = await api("/api/play",{pid:pid, cards:arr});
-  if(!r.error){ sel.clear(); await poll(); }
+  if(!r.error){ sel.clear(); clearRecommendation(); await poll(); }
 }
 async function doPass(){
   const r = await api("/api/pass",{pid:pid});
-  if(!r.error) await poll();
+  if(!r.error){ clearRecommendation(); await poll(); }
 }
 
 document.getElementById("nameInput").addEventListener("keydown", e=>{ if(e.key==="Enter") join(); });
