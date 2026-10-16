@@ -44,15 +44,15 @@
   .card.reorder-picked{transform:translateY(-8px);border-color:var(--gold);box-shadow:0 0 0 2px rgba(197,138,18,.28),0 3px 9px rgba(0,0,0,.16)}
   .card.sel{transform:translateY(-12px);border-color:var(--blue);box-shadow:0 0 0 2px rgba(47,111,237,.28),0 3px 9px rgba(0,0,0,.16)}
   .hand{display:flex;flex-wrap:wrap;align-items:flex-end;min-height:96px;padding:12px 6px 4px}
-  .hand-stage{position:relative;width:min(100%,560px);height:495px;margin:4px auto 0;overflow:hidden;isolation:isolate}
+  .hand-stage{position:relative;width:min(100%,560px);height:525px;margin:4px auto 0;overflow:hidden;isolation:isolate}
   .hand-stage>.hand-art{position:absolute;pointer-events:none;user-select:none;-webkit-user-drag:none}
-  .hand-stage>.hand-back{z-index:1;top:275px;left:21%;width:58%}
-  .hand-stage>.hand-front{z-index:20;top:275px;left:43.24%;width:20.27%}
+  .hand-stage>.hand-back{z-index:1;top:305px;left:21%;width:58%}
+  .hand-stage>.hand-front{z-index:20;top:305px;left:43.24%;width:20.27%}
   .hand-stage>.hand{position:absolute;z-index:3;inset:0;display:block;min-height:0;padding:0;overflow:visible}
   .hand-row{position:absolute;left:50%;width:96%;display:flex;justify-content:center;align-items:flex-end;transform:translateX(-50%)}
-  .hand-stage .card.big{width:124px;height:176px;font-size:40px;margin:3px 0}
-  .hand-row .card{justify-content:flex-start;padding-top:14px}
-  .hand-row .card:not(:first-child){margin-left:-22px}
+  .hand-stage .card.big{width:124px;height:176px;font-size:30px;margin:3px 0}
+  .hand-row .card{align-items:flex-start;justify-content:flex-start;padding:12px 0 0 12px;line-height:1;text-align:left}
+  .hand-row .card:not(:first-child){margin-left:-16px}
   .hand-row .card{transform:translateY(var(--fan-y,0px)) rotate(var(--fan,0deg));transform-origin:50% 115%;transition:transform .16s ease,box-shadow .16s ease}
   .hand-row .card.sel{transform:translateY(calc(var(--fan-y,0px) - 15px)) rotate(var(--fan,0deg))}
   .hand-row .card.reorder-picked{transform:translateY(calc(var(--fan-y,0px) - 11px)) rotate(var(--fan,0deg))}
@@ -134,7 +134,7 @@
     .board .lbl{font-weight:800;letter-spacing:.08em;color:#65736b;text-transform:uppercase}
     .history-panel{position:relative}
   }
-  @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}#dReorderBtn,#pReorderBtn{display:none}.hand-tools{grid-template-columns:1fr 1fr!important}.mobile-hand-tip{display:inline!important}.hand-stage{height:435px}.hand-stage>.hand-back,.hand-stage>.hand-front{top:235px}.hand-stage .card.big{width:92px;height:132px;font-size:32px}.hand-row .card{margin-left:-24px}.hand-row .card:first-child{margin-left:0}}
+  @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}#dReorderBtn,#pReorderBtn{display:none}.hand-tools{grid-template-columns:1fr 1fr!important}.mobile-hand-tip{display:inline!important}.hand-stage{height:455px}.hand-stage>.hand-back,.hand-stage>.hand-front{top:255px}.hand-stage .card.big{width:92px;height:132px;font-size:24px}.hand-row .card{margin-left:-14px}.hand-row .card:first-child{margin-left:0}}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
          padding:9px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
   #toast.show{opacity:.93}
@@ -198,7 +198,7 @@
     details.rules{border-color:rgba(137,196,164,.1)}details.rules summary{color:#9fb7a9}details.rules div{color:#c7d6cd}.strategy-note{background:rgba(83,183,128,.09);border-color:rgba(83,183,128,.25);color:#c3e3d1}.guide-card{border-color:rgba(137,196,164,.1)}
   }
   @media(max-width:900px){.hand-head .hint{flex:1 0 100%}.hand-tools{width:100%}}
-  @media(max-width:680px){.hand-row .card{margin-left:-24px;padding-top:10px}.hand-row .card:first-child{margin-left:0}.hand-tools button{width:100%;margin:0}}
+  @media(max-width:680px){.hand-row .card{margin-left:-14px;padding:8px 0 0 9px}.hand-row .card:first-child{margin-left:0}.hand-tools button{width:100%;margin:0}}
 </style>
 </head>
 <body>
@@ -544,7 +544,7 @@ function renderHand(id, pick){
     const startIndex = index;
     const rowCards = [];
     for(let col=0; col<count; col++){
-      const fan = (col - (count - 1) / 2) * Math.min(4.2, 16 / Math.max(1, count - 1));
+      const fan = (col - (count - 1) / 2) * Math.min(3, 12 / Math.max(1, count - 1));
       rowCards.push(handCardHtml(cards[index], index, pick, fan.toFixed(2), (Math.abs(fan)*0.5).toFixed(1)));
       index++;
     }
