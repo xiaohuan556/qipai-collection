@@ -128,6 +128,18 @@ def has_triple(hand):
     return any(v >= 3 for v in cnt.values())
 
 
+def triple_for_jiu(hand):
+    """返回用于揪牌并向全桌公开的三张牌；有多组时取牌力最高的一组。"""
+    groups = {}
+    for card in hand:
+        groups.setdefault(rname(card), []).append(card)
+    ranks = [rank for rank, cards in groups.items() if len(cards) >= 3]
+    if not ranks:
+        return []
+    rank = max(ranks, key=lambda x: COMBO_VAL[x])
+    return sort_hand(groups[rank])[:3]
+
+
 def sort_hand(hand):
     return sorted(hand, key=lambda c: (-single_val(c), c))
 
@@ -163,6 +175,7 @@ class Game:
         self.declared = False          # 明打（亮 / 揪）
         self.bombs = 0
         self.jiu_by = set()
+        self.jiu_details = []         # 揪牌者与公开的三张牌
         self.red_holders = []
         self.revealed = set()          # 红十已公开的玩家
         self.jiefeng = None             # 接风提示
@@ -321,6 +334,8 @@ class Game:
             if not self.can_jiu(pid):
                 return {"error": "揪牌需要有「三张一样」的牌，且自己不能有红十"}
             self.jiu_by.add(pid)
+            if not any(item["pid"] == pid for item in self.jiu_details):
+                self.jiu_details.append({"pid": pid, "cards": triple_for_jiu(pl["hand"])})
             self.declared = True
             for r in self.red_holders:
                 self.revealed.add(r)
@@ -708,6 +723,7 @@ class Game:
                 "delta": round(self.last_round_delta.get(q, 0.0), 2),
                 "is_me": q == pid,
                 "is_bot": bool(pl.get("is_bot")),
+                "jiu_by": q in self.jiu_by,
                 "choice": pl["choice"],
             })
         st = {
@@ -726,6 +742,10 @@ class Game:
             "passed": [self.p[x]["name"] for x in self.passed if x in self.p],
             "declared": self.declared,
             "bombs": self.bombs,
+            "jiu_details": [{"pid": item["pid"],
+                             "name": self.p[item["pid"]]["name"],
+                             "cards": item["cards"]}
+                            for item in self.jiu_details if item["pid"] in self.p],
             "revealed": sorted(self.revealed),
             "teams_known": self._teams_known(),
             "jiefeng": ({"by": self.p[self.jiefeng["by"]]["name"],

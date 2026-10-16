@@ -53,6 +53,7 @@
   .seat{flex:1 1 180px;min-width:170px;background:#fafafb;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
   .seat.me{background:#f0f5ff;border-color:#c6d8fb}
   .seat.turn{border-color:var(--blue);box-shadow:0 0 0 2px rgba(47,111,237,.18)}
+  .seat.red-revealed{background:#fff0f0;border:2px solid #e24a4a;box-shadow:0 0 0 3px rgba(226,74,74,.12)}
   .seat.out{opacity:.55}
   .seat .nm{font-weight:700}
   .seat .cnt{color:var(--sub);font-size:13px}
@@ -61,6 +62,8 @@
   .tag.gray{background:#eee;color:#777}
   .tag.green{background:#e8f6ea;color:var(--green);border:1px solid #bde5c4}
   .tag.turn-tag{background:#174f36;color:#fff;border:1px solid #174f36;font-weight:800}
+  .tag.red-player{background:#d92b2b;color:#fff;border:1px solid #d92b2b;font-weight:900}
+  .tag.jiu-tag{background:#6b3ab5;color:#fff;border:1px solid #6b3ab5;font-weight:800}
   .money{font-weight:700;font-size:13px}
   .money.pos{color:var(--red)}   /* 中式：赢=红 */
   .money.neg{color:var(--green)} /* 输=绿 */
@@ -78,6 +81,9 @@
   .last-play-detail{font-size:14px;color:#303833}.last-play-detail b{font-size:16px}
   .trick-history{margin-top:8px;padding-top:7px;border-top:1px solid #e4e8e5}
   .trick-history-title{font-size:11px;color:var(--sub);margin-bottom:2px}
+  .round-alerts{display:grid;gap:7px;margin:8px 0}
+  .jiu-alert{display:flex;align-items:center;gap:10px;padding:9px 12px;border:2px solid #8052c2;border-radius:10px;background:#f5efff;color:#442172;font-weight:700}
+  .jiu-alert strong{font-size:16px;color:#32145d}.jiu-alert .cards{white-space:nowrap}
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
   .pill{background:#f0f0f3;border-radius:20px;padding:2px 10px;font-size:12px;color:#555}
   .pill.on{background:#fdeaea;color:var(--red);font-weight:700}
@@ -99,6 +105,8 @@
   .rule-table th{color:var(--sub);font-weight:600}
   @media(min-width:681px){
     .seat.turn{position:relative;background:#fff8df;border:2px solid #d39a21;padding:8px 10px;box-shadow:0 0 0 4px rgba(211,154,33,.17),0 8px 20px rgba(116,82,10,.13);transform:translateY(-2px)}
+    .seat.red-revealed{background:linear-gradient(135deg,#fff0f0,#ffe1e1);border-color:#df3e3e;box-shadow:0 0 0 4px rgba(223,62,62,.14),0 8px 20px rgba(128,28,28,.12)}
+    .seat.red-revealed.turn{border-color:#d39a21;box-shadow:0 0 0 4px rgba(211,154,33,.2),0 8px 20px rgba(128,28,28,.14)}
     .seat.turn .nm{font-size:16px;color:#6d4900}
     #pTurn{display:none}
     .board{padding:13px 14px;border-style:solid;background:#f6f9f7}
@@ -121,6 +129,7 @@
     .seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.seat{min-width:0;padding:8px 9px;border-radius:13px;background:rgba(3,7,18,.2);border-color:rgba(166,187,240,.11)}.seat.me{background:rgba(126,161,255,.13);border-color:rgba(151,184,255,.35)}.seat.turn{border-color:#91b2ff;box-shadow:0 0 0 2px rgba(145,178,255,.14),0 0 24px rgba(91,126,220,.17)}
     .bar{gap:6px;margin-bottom:8px}.pill{background:rgba(255,255,255,.07);color:#c8d4cc;padding:4px 9px}.pill.on{background:rgba(255,112,107,.13);color:#ff9691}
     .turn-banner{margin:8px 0;padding:8px 10px;gap:7px;border-radius:11px;background:rgba(89,178,130,.16);border:1px solid rgba(111,207,157,.34);box-shadow:none}.turn-banner.my-turn{background:rgba(108,157,255,.16);box-shadow:none}.turn-banner .turn-name{font-size:16px}.turn-banner .turn-label,.turn-banner .turn-action{font-size:11px}.tag.turn-tag{background:rgba(107,206,154,.2);border-color:rgba(111,207,157,.4);color:#bce8cf}
+    .seat.red-revealed{background:linear-gradient(145deg,rgba(211,64,72,.25),rgba(101,27,42,.18));border-color:#f06f75;box-shadow:0 0 0 2px rgba(240,111,117,.12),0 0 24px rgba(184,42,57,.17)}.tag.red-player{background:#d7434b;border-color:#ef747a}.tag.jiu-tag{background:#7853b8;border-color:#9d7bd7}.jiu-alert{display:block;text-align:center;background:rgba(119,78,178,.16);border-color:rgba(163,125,218,.45);color:#e5d5ff}.jiu-alert strong{color:#f2e9ff}.jiu-alert .cards{display:block;margin-top:4px}
     .board{position:relative;min-height:112px;margin:9px -3px 8px;padding:12px;border:1px solid rgba(151,181,244,.2);border-radius:50% / 18%;background:radial-gradient(ellipse at center,#294a87 0,#192f5c 58%,#0e1c38 100%);box-shadow:inset 0 0 38px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.22)}.board .lbl{color:#afbddc;text-align:center}.trickline{text-align:center;color:#eef3ff}
     .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.trick-history{border-color:rgba(255,255,255,.12)}
     .hand-head{margin-top:8px;display:block}.hand-head>.hint{font-size:11px;line-height:1.45;text-align:center;min-width:0}.hand-tools{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 2px}.hand-tools button{min-height:38px;padding:7px 8px;font-size:12px}
@@ -213,6 +222,7 @@
     <span class="pill">底 <b id="dBase"></b> 元</span>
     <span class="pill" id="dDeclared"></span>
   </div>
+  <div class="round-alerts" id="declareAlerts"></div>
   <div class="hint">这是你的 10 张牌 —— <b>有红十可以「亮红十」</b>；没红十但手里有「三张一样」可以「揪牌」逼红十亮出来。亮或揪都算开局翻倍。</div>
   <div class="hand-head">
     <div class="hint">手牌只在你这台设备保存排序，不影响牌局；可直接拖牌，或点“调整牌序”后点两张交换。</div>
@@ -239,6 +249,7 @@
     <span class="pill" id="pTurn"></span>
   </div>
   <div class="turn-banner" id="turnBanner"></div>
+  <div class="round-alerts" id="playAlerts"></div>
   <div class="seats" id="pSeats"></div>
 
   <div class="board">
@@ -563,13 +574,21 @@ function render(){
 function seatHtml(p, big){
   let tags = "";
   if(S.phase === "play" && S.turn === p.pid) tags += '<span class="tag turn-tag">正在出牌</span>';
-  if(p.red_shown) tags += '<span class="tag red">红十×'+ (p.red_count||1) +' 已亮</span>';
+  if(p.red_shown) tags += '<span class="tag red-player">🔴 红十玩家'+(p.red_count>1?' ×'+p.red_count:'')+'</span>';
+  if(p.jiu_by) tags += '<span class="tag jiu-tag">🔍 揪牌者</span>';
   if(p.out) tags += '<span class="tag gray">已走完 第'+p.out_order+'</span>';
-  const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.out?" out":"");
+  const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.red_shown?" red-revealed":"") + (p.out?" out":"");
   return '<div class="'+cls+'">'
     + '<div class="nm">'+p.name+(p.is_bot?' <span class="tag gray">🤖 机器人</span>':'')+(p.is_me?' <span class="tag gray">你</span>':'')+tags+'</div>'
     + '<div class="cnt">剩 '+p.count+' 张　累计 '+moneyHtml(p.money)+(p.delta?('　本局 '+moneyHtml(p.delta)):'')+'</div>'
     + '</div>';
+}
+
+function renderRoundAlerts(targetId){
+  const rows = (S.jiu_details || []).map(x=>
+    '<div class="jiu-alert"><span>🔍 <strong>'+escRoom(x.name)+'</strong> 用以下三张牌揪牌，红十身份已公开</span><span class="cards">'+x.cards.map(c=>cardHtml(c,"sm")).join("")+'</span></div>'
+  );
+  document.getElementById(targetId).innerHTML = rows.join("");
 }
 
 function renderLobby(){
@@ -597,6 +616,7 @@ function renderDeclare(){
   document.getElementById("dBase").textContent = S.base;
   document.getElementById("dDeclared").className = "pill" + (S.declared?" on":"");
   document.getElementById("dDeclared").textContent = S.declared ? "明打（已翻倍）" : "暗打";
+  renderRoundAlerts("declareAlerts");
 
   renderHand("dHand", false);
   document.getElementById("dSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
@@ -630,6 +650,7 @@ function renderPlay(){
   const turnBanner = document.getElementById("turnBanner");
   turnBanner.className = "turn-banner" + (S.is_turn ? " my-turn" : "");
   turnBanner.innerHTML = '<span class="turn-label">现在轮到</span><span class="turn-name">'+escRoom(S.turn_name||"等待中")+'</span><span class="turn-action">'+(S.is_turn?'请你出牌':'正在思考 / 出牌')+'</span>';
+  renderRoundAlerts("playAlerts");
 
   document.getElementById("pSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
 
