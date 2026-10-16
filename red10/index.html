@@ -60,6 +60,7 @@
   .tag.red{background:#fdeaea;color:var(--red);border:1px solid #f5c2c2}
   .tag.gray{background:#eee;color:#777}
   .tag.green{background:#e8f6ea;color:var(--green);border:1px solid #bde5c4}
+  .tag.turn-tag{background:#174f36;color:#fff;border:1px solid #174f36;font-weight:800}
   .money{font-weight:700;font-size:13px}
   .money.pos{color:var(--red)}   /* 中式：赢=红 */
   .money.neg{color:var(--green)} /* 输=绿 */
@@ -67,6 +68,16 @@
   .board{background:#fafafb;border:1px dashed #d5d6dc;border-radius:10px;padding:10px;min-height:86px;margin:10px 0}
   .board .lbl{font-size:12px;color:var(--sub);margin-bottom:4px}
   .trickline{font-size:13px;color:#444;padding:2px 0}
+  .turn-banner{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0;padding:10px 14px;border-radius:12px;background:#174f36;color:#fff;box-shadow:0 7px 18px rgba(23,79,54,.2)}
+  .turn-banner .turn-label{font-size:12px;letter-spacing:.12em;opacity:.78}
+  .turn-banner .turn-name{font-size:20px;font-weight:900;letter-spacing:.04em}
+  .turn-banner .turn-action{font-size:13px;font-weight:700}
+  .turn-banner.my-turn{background:#1f64c8;box-shadow:0 7px 20px rgba(31,100,200,.24)}
+  .last-play-card{display:flex;align-items:center;gap:12px;min-height:68px;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #dce2dd}
+  .last-player{display:inline-flex;align-items:center;align-self:stretch;min-width:96px;justify-content:center;padding:7px 12px;border-radius:8px;background:#174f36;color:#fff;font-size:16px;font-weight:900}
+  .last-play-detail{font-size:14px;color:#303833}.last-play-detail b{font-size:16px}
+  .trick-history{margin-top:8px;padding-top:7px;border-top:1px solid #e4e8e5}
+  .trick-history-title{font-size:11px;color:var(--sub);margin-bottom:2px}
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
   .pill{background:#f0f0f3;border-radius:20px;padding:2px 10px;font-size:12px;color:#555}
   .pill.on{background:#fdeaea;color:var(--red);font-weight:700}
@@ -86,6 +97,13 @@
   .rule-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
   .rule-table th,.rule-table td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
   .rule-table th{color:var(--sub);font-weight:600}
+  @media(min-width:681px){
+    .seat.turn{position:relative;background:#fff8df;border:2px solid #d39a21;padding:8px 10px;box-shadow:0 0 0 4px rgba(211,154,33,.17),0 8px 20px rgba(116,82,10,.13);transform:translateY(-2px)}
+    .seat.turn .nm{font-size:16px;color:#6d4900}
+    #pTurn{display:none}
+    .board{padding:13px 14px;border-style:solid;background:#f6f9f7}
+    .board .lbl{font-weight:800;letter-spacing:.08em;color:#65736b;text-transform:uppercase}
+  }
   @media(max-width:680px){.guide-grid{grid-template-columns:1fr}.card.big{width:54px;height:78px;font-size:21px}.panel{padding:11px}.hand{padding-left:0;padding-right:0}}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#222;color:#fff;
          padding:9px 18px;border-radius:22px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
@@ -102,7 +120,9 @@
     .room-gate{margin-top:10px}.room-create{display:grid;grid-template-columns:1fr 1fr;gap:8px}.room-create input{width:100%;min-width:0}.room-create button{grid-column:1/-1}.room-row{background:rgba(255,255,255,.045);border-color:rgba(166,187,240,.12);padding:12px}.room-row>button{min-height:38px;padding:8px 13px}.room-row .meta{color:#98a5c4}
     .seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.seat{min-width:0;padding:8px 9px;border-radius:13px;background:rgba(3,7,18,.2);border-color:rgba(166,187,240,.11)}.seat.me{background:rgba(126,161,255,.13);border-color:rgba(151,184,255,.35)}.seat.turn{border-color:#91b2ff;box-shadow:0 0 0 2px rgba(145,178,255,.14),0 0 24px rgba(91,126,220,.17)}
     .bar{gap:6px;margin-bottom:8px}.pill{background:rgba(255,255,255,.07);color:#c8d4cc;padding:4px 9px}.pill.on{background:rgba(255,112,107,.13);color:#ff9691}
+    .turn-banner{margin:8px 0;padding:8px 10px;gap:7px;border-radius:11px;background:rgba(89,178,130,.16);border:1px solid rgba(111,207,157,.34);box-shadow:none}.turn-banner.my-turn{background:rgba(108,157,255,.16);box-shadow:none}.turn-banner .turn-name{font-size:16px}.turn-banner .turn-label,.turn-banner .turn-action{font-size:11px}.tag.turn-tag{background:rgba(107,206,154,.2);border-color:rgba(111,207,157,.4);color:#bce8cf}
     .board{position:relative;min-height:112px;margin:9px -3px 8px;padding:12px;border:1px solid rgba(151,181,244,.2);border-radius:50% / 18%;background:radial-gradient(ellipse at center,#294a87 0,#192f5c 58%,#0e1c38 100%);box-shadow:inset 0 0 38px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.22)}.board .lbl{color:#afbddc;text-align:center}.trickline{text-align:center;color:#eef3ff}
+    .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.trick-history{border-color:rgba(255,255,255,.12)}
     .hand-head{margin-top:8px;display:block}.hand-head>.hint{font-size:11px;line-height:1.45;text-align:center;min-width:0}.hand-tools{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 2px}.hand-tools button{min-height:38px;padding:7px 8px;font-size:12px}
     .hand{min-height:102px;flex-wrap:nowrap;justify-content:center;align-items:flex-end;padding:20px 0 6px;overflow:visible}.hand .card{width:50px;height:72px;margin:0 0 0 -17px;border-radius:8px;flex:0 0 50px;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.28)}.hand .card:first-child{margin-left:0}.hand .card.sel{transform:translateY(-16px)}.hand .card.reorder-picked{transform:translateY(-11px)}
     .card{background:linear-gradient(145deg,#fffdf7,#eee8db);border-color:#d4cbbb;color:#111}.card small{color:#6e6a63}.card.big{width:54px;height:78px;flex-basis:54px}.card.sm{width:35px;height:50px;flex-basis:35px}#play,#declare{overflow:hidden}
@@ -218,6 +238,7 @@
     <span class="pill" id="pBombs"></span>
     <span class="pill" id="pTurn"></span>
   </div>
+  <div class="turn-banner" id="turnBanner"></div>
   <div class="seats" id="pSeats"></div>
 
   <div class="board">
@@ -541,6 +562,7 @@ function render(){
 
 function seatHtml(p, big){
   let tags = "";
+  if(S.phase === "play" && S.turn === p.pid) tags += '<span class="tag turn-tag">正在出牌</span>';
   if(p.red_shown) tags += '<span class="tag red">红十×'+ (p.red_count||1) +' 已亮</span>';
   if(p.out) tags += '<span class="tag gray">已走完 第'+p.out_order+'</span>';
   const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.out?" out":"");
@@ -605,18 +627,25 @@ function renderPlay(){
   bb.className = "pill" + (S.bombs?" on":"");
   bb.textContent = "炸弹 " + S.bombs + " 个";
   document.getElementById("pTurn").textContent = S.turn_name ? ("轮到 " + S.turn_name) : "";
+  const turnBanner = document.getElementById("turnBanner");
+  turnBanner.className = "turn-banner" + (S.is_turn ? " my-turn" : "");
+  turnBanner.innerHTML = '<span class="turn-label">现在轮到</span><span class="turn-name">'+escRoom(S.turn_name||"等待中")+'</span><span class="turn-action">'+(S.is_turn?'请你出牌':'正在思考 / 出牌')+'</span>';
 
   document.getElementById("pSeats").innerHTML = S.players.map(p=>seatHtml(p)).join("");
 
   const lp = document.getElementById("lastPlay");
   lp.innerHTML = S.last_play
-    ? '<div class="trickline"><b>'+S.last_play.name+'</b> 出 '+S.last_play.type+'：'+S.last_play.cards.map(c=>cardHtml(c,"sm")).join("")+'</div>'
+    ? '<div class="last-play-card"><span class="last-player">'+escRoom(S.last_play.name)+'</span><div class="last-play-detail"><b>刚刚出了 '+S.last_play.type+'</b><div>'+S.last_play.cards.map(c=>cardHtml(c,"sm")).join("")+'</div></div></div>'
     : '<div class="hint">新的一轮，等待 <b>'+(S.turn_name||"轮到的玩家")+'</b> 先出</div>';
   document.getElementById("jiefengLine").textContent = S.jiefeng
     ? ("🔁 " + S.jiefeng.by + " 出完了" + (S.jiefeng.kind === "mate" ? "，队友 " : "，下家 ") + S.jiefeng.to + " 接风先出")
     : "";
-  document.getElementById("trickList").innerHTML = S.trick.length
-    ? S.trick.map(t=>'<div class="trickline">'+t.name+'：'+(t.pass?'<span style="color:#999">不要</span>':t.type+' '+t.cards.map(c=>cardHtml(c,"sm")).join(""))+'</div>').join("")
+  const history = S.trick.slice();
+  if(S.last_play){
+    for(let i=history.length-1;i>=0;i--){ if(!history[i].pass){ history.splice(i,1); break; } }
+  }
+  document.getElementById("trickList").innerHTML = history.length
+    ? '<div class="trick-history"><div class="trick-history-title">本轮较早记录</div>'+history.map(t=>'<div class="trickline">'+escRoom(t.name)+'：'+(t.pass?'<span style="color:#999">不要</span>':t.type+' '+t.cards.map(c=>cardHtml(c,"sm")).join(""))+'</div>').join("")+'</div>'
     : "";
 
   renderHand("pHand", true);
