@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: xiaohuan1314-red10-game
+    name: gh132746-red10-game
     runtime: python
     plan: free
     buildCommand: python -m py_compile red10/server.py
@@ -8,7 +8,7 @@ services:
     healthCheckPath: /
 
   - type: web
-    name: xiaohuan1314-poker-game
+    name: gh132746-poker-game
     runtime: python
     plan: free
     buildCommand: python -m py_compile poker/server.py
@@ -16,7 +16,7 @@ services:
     healthCheckPath: /
 
   - type: web
-    name: xiaohuan1314-dryeye-game
+    name: gh132746-dryeye-game
     runtime: python
     plan: free
     buildCommand: python -m py_compile dryeye/server.py
