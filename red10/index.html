@@ -92,6 +92,7 @@
   .round-alerts{display:grid;gap:7px;margin:8px 0}
   .jiu-alert{display:flex;align-items:center;gap:10px;padding:9px 12px;border:2px solid #8052c2;border-radius:10px;background:#f5efff;color:#442172;font-weight:700}
   .jiu-alert strong{font-size:16px;color:#32145d}.jiu-alert .cards{white-space:nowrap}
+  .liang-alert{padding:10px 12px;border:2px solid #df3e3e;border-radius:10px;background:#fff0f0;color:#8c2020;font-weight:800;text-align:center}
   .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
   .pill{background:#f0f0f3;border-radius:20px;padding:2px 10px;font-size:12px;color:#555}
   .pill.on{background:#fdeaea;color:var(--red);font-weight:700}
@@ -138,7 +139,7 @@
     .seats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.seat{min-width:0;padding:8px 9px;border-radius:13px;background:rgba(3,7,18,.2);border-color:rgba(166,187,240,.11)}.seat.me{background:rgba(126,161,255,.13);border-color:rgba(151,184,255,.35)}.seat.turn{border-color:#91b2ff;box-shadow:0 0 0 2px rgba(145,178,255,.14),0 0 24px rgba(91,126,220,.17)}
     .bar{gap:6px;margin-bottom:8px}.pill{background:rgba(255,255,255,.07);color:#c8d4cc;padding:4px 9px}.pill.on{background:rgba(255,112,107,.13);color:#ff9691}
     .turn-banner{margin:8px 0;padding:8px 10px;gap:7px;border-radius:11px;background:rgba(89,178,130,.16);border:1px solid rgba(111,207,157,.34);box-shadow:none}.turn-banner.my-turn{background:rgba(108,157,255,.16);box-shadow:none}.turn-banner .turn-name{font-size:16px}.turn-banner .turn-label,.turn-banner .turn-action{font-size:11px}.tag.turn-tag{background:rgba(107,206,154,.2);border-color:rgba(111,207,157,.4);color:#bce8cf}
-    .seat.red-revealed{background:linear-gradient(145deg,rgba(211,64,72,.25),rgba(101,27,42,.18));border-color:#f06f75;box-shadow:0 0 0 2px rgba(240,111,117,.12),0 0 24px rgba(184,42,57,.17)}.tag.red-player{background:#d7434b;border-color:#ef747a}.tag.jiu-tag{background:#7853b8;border-color:#9d7bd7}.jiu-alert{display:block;text-align:center;background:rgba(119,78,178,.16);border-color:rgba(163,125,218,.45);color:#e5d5ff}.jiu-alert strong{color:#f2e9ff}.jiu-alert .cards{display:block;margin-top:4px}
+    .seat.red-revealed{background:linear-gradient(145deg,rgba(211,64,72,.25),rgba(101,27,42,.18));border-color:#f06f75;box-shadow:0 0 0 2px rgba(240,111,117,.12),0 0 24px rgba(184,42,57,.17)}.tag.red-player{background:#d7434b;border-color:#ef747a}.tag.jiu-tag{background:#7853b8;border-color:#9d7bd7}.jiu-alert{display:block;text-align:center;background:rgba(119,78,178,.16);border-color:rgba(163,125,218,.45);color:#e5d5ff}.jiu-alert strong{color:#f2e9ff}.jiu-alert .cards{display:block;margin-top:4px}.liang-alert{background:rgba(211,64,72,.18);border-color:rgba(240,111,117,.55);color:#ffdadd}
     .board{position:relative;min-height:112px;margin:9px -3px 8px;padding:12px;border:1px solid rgba(151,181,244,.2);border-radius:50% / 18%;background:radial-gradient(ellipse at center,#294a87 0,#192f5c 58%,#0e1c38 100%);box-shadow:inset 0 0 38px rgba(0,0,0,.3),0 8px 22px rgba(0,0,0,.22)}.board .lbl{color:#afbddc;text-align:center}.trickline{text-align:center;color:#eef3ff}
     .last-play-card{display:block;min-height:0;padding:6px;background:transparent;border:0;text-align:center}.last-player{min-width:0;align-self:auto;padding:3px 9px;margin-bottom:5px;background:rgba(255,255,255,.12);font-size:13px}.last-play-detail{color:#eef3ff}.last-play-detail b{font-size:14px}.history-panel{background:rgba(255,255,255,.04);border-color:rgba(138,197,165,.14)}.history-title{color:#d3e3d9}.trick-history{grid-template-columns:1fr}.trickline{background:rgba(1,9,5,.22);border-color:rgba(138,197,165,.12);color:#eef6f0}.trickline.latest{background:rgba(73,177,120,.14);border-color:rgba(111,207,157,.35)}.trick-action{color:#b9cbbf}.recommend-info{color:#9fe0bd}
     .hand-head{margin-top:8px;display:block}.hand-head>.hint{font-size:11px;line-height:1.45;text-align:center;min-width:0}.hand-tools{display:grid;grid-template-columns:1fr 1fr;margin:8px 0 2px}.hand-tools button{min-height:38px;padding:7px 8px;font-size:12px}
@@ -234,7 +235,7 @@
     <span class="pill" id="dDeclared"></span>
   </div>
   <div class="round-alerts" id="declareAlerts"></div>
-  <div class="hint"><b>出牌前先准备：</b>有红十可选择亮或不亮，有三张/四张炸弹可选择揪或不揪。你的可选项只显示在自己屏幕上，其他人只能看到“准备中 / 已准备”。</div>
+  <div class="hint"><b>出牌前先准备：</b>有红十可选择亮或不亮；只要一人亮，场上所有红十立即一起公开。持有三张/四张炸弹可选择揪或不揪。你的可选项只显示在自己屏幕上，其他人只能看到“准备中 / 已准备”。</div>
   <div class="hand-head">
     <div class="hint">手牌横向排列；点击自动理牌按牌力排序，拖动可调整位置，轻点是选牌。</div>
     <div class="hand-tools"><button class="ghost" id="dReorderBtn" onclick="toggleReorder()">↔ 点两张交换</button><button class="ghost" onclick="autoSort()">自动理牌</button></div>
@@ -311,7 +312,7 @@
     <b>管牌</b>：单管单，对管对，单龙管单龙，双龙管双龙（张数要一样）；<b>三张</b>（炸弹）可管单/对/单龙；<b>四张</b>（炸弹）可管单/对/单龙/双龙/三张；<b>双红十</b>最大，管任意牌型。三张管不了双龙。<br>
     <b>接风</b>：出完牌的人如果对方都要不上，<b>队友接风</b>先出（暗打时队伍没明朗，按顺序由下家接）。<br>
     <b>双红十</b>：两张红十不能凑对、不能凑顺，但可以凑三个十。<b>四个十直接赢三家。</b><br>
-    <b>亮牌 / 揪牌</b>：发完牌后有红十的可以「亮红十」（同时拿两张就一起亮）；没红十而有「三张一样」的可以「揪」，逼红十玩家亮出来。亮或揪 = 明打，开局翻倍。<br>
+    <b>亮牌 / 揪牌</b>：发完牌后有红十的可以「亮红十」。<b>只要任意一人亮，场上两张红十必须全部公开</b>，另一位持有者会被动亮出；同一人拿两张则一起亮。没红十而有「三张一样」的可以「揪」，逼全部红十玩家亮出来。亮或揪 = 明打，开局翻倍。<br>
     <b>出牌</b>：首局第一手由抓到 <b>红桃6</b> 的人先出；从第二局起，由上一局最先走完的玩家先出（平局也一样）。只有双红十投降或四个十直接赢时，下一局才重新由红桃6持有者先出。<br>
     <b>输赢</b>：红十持有者一队，其余人为另一队（一人拿双红十则 1 打 3）。<br>
     &nbsp;&nbsp;· 红十方赢：把红十都走掉（双红十第一个走完即赢）<br>
@@ -669,7 +670,10 @@ function render(){
 function seatHtml(p, big){
   let tags = "";
   if(S.phase === "play" && S.turn === p.pid) tags += '<span class="tag turn-tag">正在出牌</span>';
-  if(p.red_shown) tags += '<span class="tag red-player">🔴 红十玩家'+(p.red_count>1?' ×'+p.red_count:'')+'</span>';
+  if(p.red_shown){
+    const mode = p.red_reveal_mode === "active" ? " · 主动亮" : (p.red_reveal_mode === "forced" ? " · 被动亮" : "");
+    tags += '<span class="tag red-player">🔴 红十玩家'+(p.red_count>1?' ×'+p.red_count:'')+mode+'</span>';
+  }
   if(p.jiu_by) tags += '<span class="tag jiu-tag">🔍 揪牌者</span>';
   if(p.out) tags += '<span class="tag gray">已走完 第'+p.out_order+'</span>';
   const cls = "seat" + (p.is_me?" me":"") + (S.turn===p.pid && S.phase==="play" ? " turn":"") + (p.red_shown?" red-revealed":"") + (p.out?" out":"");
@@ -680,9 +684,12 @@ function seatHtml(p, big){
 }
 
 function renderRoundAlerts(targetId){
-  const rows = (S.jiu_details || []).map(x=>
+  const byPid = Object.fromEntries((S.players || []).map(p=>[p.pid,p.name]));
+  const rows = (S.liang_by || []).slice(0,1).map(pid=>
+    '<div class="liang-alert">🔴 <strong>'+escRoom(byPid[pid] || "红十玩家")+'</strong> 主动亮红十，场上所有红十已按规则同时公开</div>'
+  ).concat((S.jiu_details || []).map(x=>
     '<div class="jiu-alert"><span>🔍 <strong>'+escRoom(x.name)+'</strong> 用以下三张牌揪牌，红十身份已公开</span><span class="cards">'+x.cards.map(c=>cardHtml(c,"sm")).join("")+'</span></div>'
-  );
+  ));
   document.getElementById(targetId).innerHTML = rows.join("");
 }
 
@@ -710,7 +717,9 @@ function renderDeclare(){
   document.getElementById("dRound").textContent = S.round_no;
   document.getElementById("dBase").textContent = S.base;
   document.getElementById("dDeclared").className = "pill" + (S.declared?" on":"");
-  document.getElementById("dDeclared").textContent = S.declared ? "有人亮 / 揪（已翻倍）" : "准备阶段";
+  document.getElementById("dDeclared").textContent = (S.liang_by||[]).length
+    ? "有人亮红十 · 全部红十已公开（已翻倍）"
+    : (S.declared ? "有人揪牌（已翻倍）" : "准备阶段");
   renderRoundAlerts("declareAlerts");
 
   renderHand("dHand", false);
@@ -723,11 +732,19 @@ function renderDeclare(){
     const seat = seatHtml(p);
     return seat.slice(0,-6) + extra + '</div>';
   }).join("");
-  document.getElementById("btnLiang").style.display = (S.can_liang && !S.my_choice) ? "inline-block":"none";
+  document.getElementById("btnLiang").style.display = (S.can_liang && !S.my_choice && !S.my_red_forced) ? "inline-block":"none";
   document.getElementById("btnJiu").style.display   = (S.can_jiu   && !S.my_choice) ? "inline-block":"none";
   document.getElementById("btnSur").style.display   = S.can_surrender ? "inline-block":"none";
   document.getElementById("btnOk").style.display    = !S.my_choice ? "inline-block":"none";
-  let h = S.my_choice ? "你已选择：" + (cname[S.my_choice]||S.my_choice) + "，已准备，等待其他人…" : "请完成你的选择并准备";
+  document.getElementById("btnOk").textContent = S.my_red_forced ? "✓ 红十已被动亮出，准备" : "✓ 不亮 / 不揪，准备";
+  let h;
+  if(S.my_red_forced){
+    h = S.my_choice
+      ? "场上已有玩家亮牌，你的红十已按规则被动公开；你已准备，等待其他人…"
+      : "场上已有玩家亮牌，你的红十已按规则被动公开，请确认准备";
+  }else{
+    h = S.my_choice ? "你已选择：" + (cname[S.my_choice]||S.my_choice) + "，已准备，等待其他人…" : "请完成你的选择并准备";
+  }
   if(S.declared) h += "　（本局已翻倍）";
   document.getElementById("dHint").textContent = h + "　" + ready + "/" + S.players.length + " 已准备";
 }

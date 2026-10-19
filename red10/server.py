@@ -174,6 +174,7 @@ class Game:
         self.passed = set()
         self.declared = False          # 明打（亮 / 揪）
         self.bombs = 0
+        self.liang_by = set()          # 主动亮红十的玩家
         self.jiu_by = set()
         self.jiu_details = []         # 揪牌者与公开的三张牌
         self.red_holders = []
@@ -327,9 +328,12 @@ class Game:
         if action == "liang":
             if not self.can_liang(pid):
                 return {"error": "你手里没有红十"}
-            if pid not in self.revealed:      # 可能已被别人「揪」出来了
-                self.revealed.add(pid)
-                self.declared = True
+            self.liang_by.add(pid)
+            self.declared = True
+            # 连锁亮牌：只要有人主动亮红十，场上两张红十必须全部公开。
+            # 另一位持有者即使已经选择“不亮”，也会立即被动亮出。
+            for r in self.red_holders:
+                self.revealed.add(r)
         elif action == "jiu":
             if not self.can_jiu(pid):
                 return {"error": "揪牌需要有「三张一样」的牌，且自己不能有红十"}
@@ -503,7 +507,11 @@ class Game:
             action = "jiu" if random.random() < 0.7 else "ok"
         elif self.can_liang(pid):
             red_count = sum(c in RED10 for c in self.p[pid]["hand"])
-            action = "liang" if red_count == 1 and random.random() < 0.25 else "ok"
+            # 红十已经因别人亮牌或揪牌而公开时，机器人只需确认准备。
+            if pid in self.revealed:
+                action = "ok"
+            else:
+                action = "liang" if red_count == 1 and random.random() < 0.25 else "ok"
         else:
             action = "ok"
         return self.declare(pid, action)
@@ -719,6 +727,9 @@ class Game:
                 "red_shown": (q in self.revealed),
                 "red_count": (sum(1 for c in pl["hand"] if c in RED10)
                               if (q in self.revealed or q == pid) else 0),
+                "red_reveal_mode": ("active" if q in self.liang_by else
+                                    ("forced" if q in self.revealed and
+                                     (self.liang_by or self.jiu_by) else "")),
                 "money": round(self.ledger.get(q, 0.0), 2),
                 "delta": round(self.last_round_delta.get(q, 0.0), 2),
                 "is_me": q == pid,
@@ -744,6 +755,7 @@ class Game:
             "passed": [self.p[x]["name"] for x in self.passed if x in self.p],
             "declared": self.declared,
             "bombs": self.bombs,
+            "liang_by": sorted(self.liang_by),
             "jiu_details": [{"pid": item["pid"],
                              "name": self.p[item["pid"]]["name"],
                              "cards": item["cards"]}
@@ -770,6 +782,9 @@ class Game:
             st["my_choice"] = me["choice"]
             st["can_liang"] = self.can_liang(pid)
             st["can_jiu"] = self.can_jiu(pid)
+            st["my_red_forced"] = bool(
+                self.can_liang(pid) and pid in self.revealed and pid not in self.liang_by
+            )
             st["can_surrender"] = self._can_surrender(pid)
             st["is_turn"] = (self.turn == pid and self.phase == "play")
             st["must_play"] = (self.last_play is None)
