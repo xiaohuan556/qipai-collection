@@ -401,31 +401,6 @@ class Game:
             self._advance()
             return None
 
-    def act_skip(self, pid):
-        """首出但手里只有无法单出的王牌时，摸一张牌并跳过。"""
-        with self.lock:
-            if self.phase != 'play':
-                return '当前不在对局中'
-            if self.players[self.turn]['pid'] != pid:
-                return '还没轮到你'
-            if self.last:
-                return '有人出牌在桌上，用「要不起」跳过'
-            p = self.player_by(pid)
-            if gen_plays(p['hand']):
-                return '你还有能出的牌'
-            if self.deck:
-                c = self.deck.pop()
-                p['hand'].append(c)
-                self.add_log(f'「{p["name"]}」只剩王牌无法单出，摸一张牌并跳过')
-                if is_full_hand_straight(p['hand']):
-                    self._end_round(pid, reason='draw_straight')
-                    return None
-            else:
-                self.add_log(f'「{p["name"]}」只剩王牌无法单出，但牌堆已空，只能跳过')
-            self.last_action = time.time()
-            self._advance()
-            return None
-
     def _advance(self):
         n = len(self.players)
         self.turn = (self.turn + 1) % n
@@ -547,7 +522,6 @@ class Game:
                 return
             # 首出
             if not cands:
-                self.act_skip(p['pid'])
                 return
             win = [ids for ids in cands if len(ids) == len(hand)]
             if win:
@@ -577,7 +551,7 @@ class Game:
                             'online': p['is_bot'] or time.time() - p['last_seen'] < 8,
                             'seat': i})
             you = None
-            can_pass = can_skip = False
+            can_pass = False
             must_play = False
             if me and self.phase == 'play':
                 is_turn = cur['pid'] == me['pid']
@@ -585,10 +559,8 @@ class Game:
                 if is_turn:
                     if self.last:
                         can_pass = True
-                    else:
-                        can_skip = not gen_plays(me['hand'])
                 you = {'pid': me['pid'], 'hand': hand, 'is_turn': is_turn,
-                       'can_pass': can_pass, 'can_skip': can_skip, 'must_play': must_play}
+                       'can_pass': can_pass, 'must_play': must_play}
             last = None
             if self.last:
                 lp = self.player_by(self.last['pid'])
@@ -756,8 +728,6 @@ class Handler(BaseHTTPRequestHandler):
             err = game.act_play(pid, data.get('cards', []))
         elif path == '/api/pass':
             err = game.act_pass(pid)
-        elif path == '/api/skip':
-            err = game.act_skip(pid)
         elif path == '/api/next':
             err = game.next_round(pid)
         elif path == '/api/addbot':

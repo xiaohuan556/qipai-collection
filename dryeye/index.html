@@ -397,7 +397,6 @@ function gameView(){
     var y = S.you;
     var hint = '';
     if (y.is_turn && S.last) hint = '可以要，也可以不要';
-    else if (y.is_turn && y.can_skip) hint = '<span class="err">王牌不能单出，需要摸牌跳过</span>';
     else if (y.is_turn) hint = '轮到你，任意出牌';
     else {
       var turnName = '';
@@ -413,7 +412,6 @@ function gameView(){
     if (y.is_turn){
       h += '<button class="btn-gold" ' + (selN ? '' : 'disabled') + ' onclick="doPlay()">出牌</button>';
       if (y.can_pass) h += '<button class="btn-red" onclick="doPass()">不要 · 过</button>';
-      if (y.can_skip) h += '<button class="btn-red" onclick="doSkip()">摸牌跳过</button>';
     }
     h += '</div></div>';
   } else {
@@ -459,7 +457,7 @@ function rulesHtml(){
     '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；同长度只能刚好大一级，如上家 345，下家只能出 456，除此以外只能出炸弹。<br>' +
     '<b>摸到顺子：</b>从牌堆摸牌后，如果整手牌刚好组成合法顺子，立即获胜。<br>' +
     '<b>炸弹：</b>四张同点，管任何牌；上家 4 个 3，你得 4 个 4 或更大。<br>' +
-    '<b>王牌：</b>可代替任意牌搭着出，例如和任意单牌组成对子；不能单独出。首出时手里确实只剩王，必须摸一张牌并跳过。<br>' +
+    '<b>王牌：</b>可代替任意牌搭着出，例如和任意单牌组成对子；不能单独出。<br>' +
     '<b>可以选择不管：</b>手里即使有能管上的牌，也可以选择“不要”。<br>' +
     '<b>没人要 → 摸牌：</b>你出的牌没人接住，只要手里还有牌，就必须从牌堆摸一张，然后继续先出。<br>' +
     '<b>谁先出完谁赢。</b>赢家下一局坐庄（庄家 6 张）。<br>' +
@@ -509,8 +507,6 @@ function doPlay(){
   });
 }
 function doPass(){ api('/api/pass', { pid: pid }, function(j){ if (j.err) toast(j.err, true); else poll(); }); }
-function doSkip(){ api('/api/skip', { pid: pid }, function(j){ if (j.err) toast(j.err, true); else poll(); }); }
-
 // ---------- 轮询 ----------
 function poll(){
   if(!room){ pollRooms(); return; }
