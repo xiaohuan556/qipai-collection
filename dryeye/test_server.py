@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
+from unittest.mock import patch
 
 from server import Game, beats, interpret, is_full_hand_straight
 
@@ -49,7 +50,7 @@ class DryEyeRuleTests(unittest.TestCase):
         self.assertIsNone(game.last)
         self.assertEqual(game.turn, 0)
 
-    def test_drawing_a_full_hand_straight_wins_immediately(self):
+    def test_drawing_a_full_hand_straight_does_not_win_immediately(self):
         game = Game()
         p1, _ = game.join('甲', 'a')
         p2, _ = game.join('乙', 'b')
@@ -61,9 +62,32 @@ class DryEyeRuleTests(unittest.TestCase):
         game.last = {'pid': p1, 'combo': ('single', 7, 1), 'cards': [card('c7', 7)]}
 
         self.assertIsNone(game.act_pass(p2))
+        self.assertEqual(game.phase, 'play')
+        self.assertEqual(game.turn, 0)
+        self.assertIsNone(game.last)
+        self.assertTrue(is_full_hand_straight(game.player_by(p1)['hand']))
+
+    def test_opening_full_hand_straight_wins_immediately(self):
+        game = Game()
+        p1, _ = game.join('甲', 'a')
+        game.join('乙', 'b')
+        draws = [
+            card('p1-3', 3), card('p2-9a', 9),
+            card('p1-4', 4), card('p2-9b', 9),
+            card('p1-5', 5), card('p2-10a', 10),
+            card('p1-6', 6), card('p2-10b', 10),
+            card('p1-7', 7), card('p2-j', 11),
+            card('p1-8', 8),
+        ]
+        fixed_deck = [card(f'f{i}', 12) for i in range(12)] + list(reversed(draws))
+
+        with patch('server.build_deck', return_value=fixed_deck), \
+                patch('server.random.shuffle'):
+            self.assertIsNone(game.start_round(p1))
+
         self.assertEqual(game.phase, 'results')
         self.assertEqual(game.last_results['winner'], '甲')
-        self.assertEqual(game.last_results['win_reason'], 'draw_straight')
+        self.assertEqual(game.last_results['win_reason'], 'opening_straight')
 
     def test_full_hand_straight_may_use_joker_as_wildcard(self):
         self.assertTrue(is_full_hand_straight([

@@ -429,7 +429,7 @@ function resultsHtml(){
   var h = '<div class="overlay"><div class="panel">' +
     '<h2>🎉 第 ' + r.round + ' 局结束</h2>' +
     '<div style="text-align:center;margin-bottom:6px">赢家：<b style="color:#ffd76a">' + esc(r.winner) + '</b>' +
-    (r.win_reason === 'draw_straight' ? ' · 摸成整手顺子，直接获胜' : '') +
+    (r.win_reason === 'opening_straight' ? ' · 开局起手整手顺子，直接获胜' : '') +
     (r.bombs ? ' · 本局炸弹 ' + r.bombs + ' 个（底分翻倍×' + (1 << r.bombs) + '）' : '') + '</div>' +
     '<table class="res"><tr><th>玩家</th><th>剩牌</th><th>剩王</th><th>倍数</th><th>输/赢</th><th>累计</th></tr>';
   r.rows.forEach(function(row){
@@ -455,7 +455,7 @@ function rulesHtml(){
     '<b>连对：</b>如上家 3344，下家必须出 4455。<br>' +
     '<b>三张：</b>必须大 1 点；三张 2 最大，可接任何三张。<br>' +
     '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；同长度只能刚好大一级，如上家 345，下家只能出 456，除此以外只能出炸弹。<br>' +
-    '<b>摸到顺子：</b>从牌堆摸牌后，如果整手牌刚好组成合法顺子，立即获胜。<br>' +
+    '<b>开局顺子：</b>游戏开始发完牌时，如果某位玩家的起手牌刚好组成合法顺子，该玩家立即获胜；游戏过程中再摸成顺子不触发直接获胜。<br>' +
     '<b>炸弹：</b>四张同点，管任何牌；上家 4 个 3，你得 4 个 4 或更大。<br>' +
     '<b>王牌：</b>可代替任意牌搭着出，例如和任意单牌组成对子；不能单独出。<br>' +
     '<b>可以选择不管：</b>手里即使有能管上的牌，也可以选择“不要”。<br>' +

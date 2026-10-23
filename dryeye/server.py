@@ -343,8 +343,14 @@ class Game:
             self.turn = di
             self.phase = 'play'
             self.last_action = time.time()
-            self.bump()
             self.add_log(f'—— 第 {self.round_no} 局开始，庄家「{order[di]["name"]}」（{len(order[di]["hand"])} 张）先出牌 ——')
+            # 只在开局发牌完成后检查；庄家起按座位顺序，首个整手为顺子的玩家直接获胜。
+            check_order = order[di:] + order[:di]
+            opening_winner = next((p for p in check_order if is_full_hand_straight(p['hand'])), None)
+            if opening_winner:
+                self._end_round(opening_winner['pid'], reason='opening_straight')
+                return None
+            self.bump()
             return None
 
     # ---------- 出牌 / 过
@@ -410,9 +416,6 @@ class Game:
                 c = self.deck.pop()
                 leader['hand'].append(c)
                 self.add_log(f'没人接住「{leader["name"]}」的牌，他从牌堆摸了一张牌')
-                if is_full_hand_straight(leader['hand']):
-                    self._end_round(leader['pid'], reason='draw_straight')
-                    return
             else:
                 self.add_log(f'没人接住「{leader["name"]}」的牌，牌堆已空不摸牌')
             self.last = None
@@ -454,8 +457,8 @@ class Game:
         self.dealer_pid = winner_pid
         self.last = None
         self.bump()
-        if reason == 'draw_straight':
-            self.add_log(f'★ 「{winner["name"]}」摸成整手顺子，直接赢得第 {self.round_no} 局！')
+        if reason == 'opening_straight':
+            self.add_log(f'★ 「{winner["name"]}」开局起手就是整手顺子，直接赢得第 {self.round_no} 局！')
         else:
             self.add_log(f'★ 「{winner["name"]}」先出完所有牌，赢得第 {self.round_no} 局！')
 
