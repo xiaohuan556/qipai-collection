@@ -431,6 +431,7 @@ function resultsHtml(){
   var h = '<div class="overlay"><div class="panel">' +
     '<h2>🎉 第 ' + r.round + ' 局结束</h2>' +
     '<div style="text-align:center;margin-bottom:6px">赢家：<b style="color:#ffd76a">' + esc(r.winner) + '</b>' +
+    (r.win_reason === 'draw_straight' ? ' · 摸成整手顺子，直接获胜' : '') +
     (r.bombs ? ' · 本局炸弹 ' + r.bombs + ' 个（底分翻倍×' + (1 << r.bombs) + '）' : '') + '</div>' +
     '<table class="res"><tr><th>玩家</th><th>剩牌</th><th>剩王</th><th>倍数</th><th>输/赢</th><th>累计</th></tr>';
   r.rows.forEach(function(row){
@@ -440,7 +441,7 @@ function resultsHtml(){
     else if (row.free) h += '<tr><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>—</td><td>免输</td><td>¥' + sc + '</td></tr>';
     else h += '<tr class="lose"><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>×' + row.mult + '</td><td>-¥' + row.pay + '</td><td>¥' + sc + '</td></tr>';
   });
-  h += '</table><div style="font-size:12px;opacity:.75;text-align:center">只剩 1 张牌免输；其余输家按剩余张数 × 底分 × 2 × 王倍数 × 炸弹倍数结算</div>';
+  h += '</table><div style="font-size:12px;opacity:.75;text-align:center">只剩 1 张牌免输；剩 5 张再 ×2；其余按剩余张数 × 底分 × 王倍数 × 炸弹倍数结算</div>';
   if (pidInList()) h += '<div class="row" style="margin-top:14px"><button class="btn-gold" style="font-size:17px;padding:11px 36px" onclick="doNext()">下一局（赢家坐庄）</button></div>' +
     '<div class="msg">任意已加入玩家都可以开启下一局</div>';
   if (S.is_host) h += '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">结束并清空房间</button></div>';
@@ -456,12 +457,13 @@ function rulesHtml(){
     '<b>连对：</b>如上家 3344，下家必须出 4455。<br>' +
     '<b>三张：</b>必须大 1 点；三张 2 最大，可接任何三张。<br>' +
     '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；同长度只能刚好大一级，如上家 345，下家只能出 456，除此以外只能出炸弹。<br>' +
+    '<b>摸到顺子：</b>从牌堆摸牌后，如果整手牌刚好组成合法顺子，立即获胜。<br>' +
     '<b>炸弹：</b>四张同点，管任何牌；上家 4 个 3，你得 4 个 4 或更大。<br>' +
     '<b>王牌：</b>可代替任意牌搭着出，例如和任意单牌组成对子；不能单独出。首出时手里确实只剩王，必须摸一张牌并跳过。<br>' +
     '<b>可以选择不管：</b>手里即使有能管上的牌，也可以选择“不要”。<br>' +
     '<b>没人要 → 摸牌：</b>你出的牌没人接住，只要手里还有牌，就必须从牌堆摸一张，然后继续先出。<br>' +
     '<b>谁先出完谁赢。</b>赢家下一局坐庄（庄家 6 张）。<br>' +
-    '<b>算钱：</b>只剩 1 张牌不用输钱；其余每个输家 = 剩余张数 × 底分 × 2；手里每剩一张王再翻倍；本局每打出一个炸弹，全场底分再翻倍。</details>';
+    '<b>算钱：</b>只剩 1 张牌不用输钱；其余每个输家 = 剩余张数 × 底分；结算时谁手里刚好剩 5 张牌，谁再乘 2；手里每剩一张王再翻倍；本局每打出一个炸弹，全场底分再翻倍。</details>';
 }
 
 function pidInList(){
