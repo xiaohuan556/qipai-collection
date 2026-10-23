@@ -396,9 +396,8 @@ function gameView(){
   if (S.you){
     var y = S.you;
     var hint = '';
-    if (y.is_turn && S.last && y.must_play) hint = '<span class="err">必须管上（能管必须管）</span>';
-    else if (y.is_turn && S.last) hint = '管不上可以过';
-    else if (y.is_turn && y.can_skip) hint = '<span class="err">只剩王牌无法出牌</span>';
+    if (y.is_turn && S.last) hint = '可以要，也可以不要';
+    else if (y.is_turn && y.can_skip) hint = '<span class="err">王牌不能单出，可以跳过（不摸牌）</span>';
     else if (y.is_turn) hint = '轮到你，任意出牌';
     else {
       var turnName = '';
@@ -413,8 +412,8 @@ function gameView(){
     h += '</div><div class="actions">';
     if (y.is_turn){
       h += '<button class="btn-gold" ' + (selN ? '' : 'disabled') + ' onclick="doPlay()">出牌</button>';
-      if (y.can_pass) h += '<button class="btn-red" onclick="doPass()">要不起 · 过</button>';
-      if (y.can_skip) h += '<button class="btn-red" onclick="doSkip()">摸牌跳过</button>';
+      if (y.can_pass) h += '<button class="btn-red" onclick="doPass()">不要 · 过</button>';
+      if (y.can_skip) h += '<button class="btn-red" onclick="doSkip()">跳过</button>';
     }
     h += '</div></div>';
   } else {
@@ -438,9 +437,10 @@ function resultsHtml(){
     var p = null; (S.players||[]).forEach(function(pp){ if (pp.pid === row.pid) p = pp; });
     var sc = p ? p.score : '';
     if (row.win) h += '<tr class="win"><td>' + esc(row.name) + '</td><td>🏆</td><td>-</td><td>-</td><td>赢</td><td>¥' + sc + '</td></tr>';
+    else if (row.free) h += '<tr><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>—</td><td>免输</td><td>¥' + sc + '</td></tr>';
     else h += '<tr class="lose"><td>' + esc(row.name) + '</td><td>' + row.rem + '</td><td>' + row.jokers + '</td><td>×' + row.mult + '</td><td>-¥' + row.pay + '</td><td>¥' + sc + '</td></tr>';
   });
-  h += '</table><div style="font-size:12px;opacity:.75;text-align:center">结算：剩余张数 × 底分 × 2（输牌翻倍）× 每张剩王再翻倍 × 每个炸弹再翻倍</div>';
+  h += '</table><div style="font-size:12px;opacity:.75;text-align:center">只剩 1 张牌免输；其余输家按剩余张数 × 底分 × 2 × 王倍数 × 炸弹倍数结算</div>';
   if (pidInList()) h += '<div class="row" style="margin-top:14px"><button class="btn-gold" style="font-size:17px;padding:11px 36px" onclick="doNext()">下一局（赢家坐庄）</button></div>' +
     '<div class="msg">任意已加入玩家都可以开启下一局</div>';
   if (S.is_host) h += '<div class="row"><button class="btn-ghost" style="font-size:12px;padding:6px 14px" onclick="doClear()">结束并清空房间</button></div>';
@@ -455,13 +455,13 @@ function rulesHtml(){
     '<b>对牌：</b>只能出大 1 点的对牌（对 2 只有炸弹能管）。<br>' +
     '<b>连对：</b>如上家 3344，下家必须出 4455。<br>' +
     '<b>三张：</b>必须大 1 点；三张 2 最大，可接任何三张。<br>' +
-    '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；如上家 345，下家出 456 或更大。<br>' +
+    '<b>顺子：</b>三张起、连续、最大到 A（不含 2）；同长度只能刚好大一级，如上家 345，下家只能出 456，除此以外只能出炸弹。<br>' +
     '<b>炸弹：</b>四张同点，管任何牌；上家 4 个 3，你得 4 个 4 或更大。<br>' +
-    '<b>王牌：</b>只能代替任意牌搭着出，不能单独出；手里只剩一张王时必须摸牌跳过。<br>' +
-    '<b>能管必须管：</b>手里有能管上的牌不许过。<br>' +
+    '<b>王牌：</b>可代替任意牌搭着出，例如和任意单牌组成对子；不能单独出。首出只剩王时可以直接跳过，不摸牌。<br>' +
+    '<b>可以选择不管：</b>手里即使有能管上的牌，也可以选择“不要”。<br>' +
     '<b>没人要 → 摸牌：</b>你出的牌没人接住，你从牌堆摸一张，然后继续先出。<br>' +
     '<b>谁先出完谁赢。</b>赢家下一局坐庄（庄家 6 张）。<br>' +
-    '<b>算钱：</b>每个输家 = 剩余张数 × 底分 × 2；手里每剩一张王再翻倍；本局每打出一个炸弹，全场底分再翻倍。</details>';
+    '<b>算钱：</b>只剩 1 张牌不用输钱；其余每个输家 = 剩余张数 × 底分 × 2；手里每剩一张王再翻倍；本局每打出一个炸弹，全场底分再翻倍。</details>';
 }
 
 function pidInList(){

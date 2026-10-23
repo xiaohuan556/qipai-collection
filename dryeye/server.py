@@ -120,8 +120,8 @@ def beats(c, last):
         if lv == 15:
             return False
         return v == 15 or v == lv + 1
-    if t == 'straight':                          # 顺子：同长度，起点更大（最大到 A）
-        return l == ll and v > lv
+    if t == 'straight':                          # 顺子：同长度，只能刚好大 1（其余只能用炸弹）
+        return l == ll and v == lv + 1
     if t == 'pairseq':                           # 连对：同对数，起点大 1
         return l == ll and v == lv + 1
     return False
@@ -391,15 +391,13 @@ class Game:
             if not self.last:
                 return '你是首出，必须出牌'
             p = self.player_by(pid)
-            if winning_plays(p['hand'], self.last['combo']):
-                return '你手里有能管上的牌，必须出（能管必须管）'
-            self.add_log(f'「{p["name"]}」要不起，过')
+            self.add_log(f'「{p["name"]}」选择不要，过')
             self.last_action = time.time()
             self._advance()
             return None
 
     def act_skip(self, pid):
-        """首出但手里只剩王牌（无法组牌）→ 摸牌并跳过"""
+        """首出但手里只有无法单出的王牌时，不摸牌，直接跳过。"""
         with self.lock:
             if self.phase != 'play':
                 return '当前不在对局中'
@@ -410,12 +408,7 @@ class Game:
             p = self.player_by(pid)
             if gen_plays(p['hand']):
                 return '你还有能出的牌'
-            if self.deck:
-                c = self.deck.pop()
-                p['hand'].append(c)
-                self.add_log(f'「{p["name"]}」只剩王牌无法出牌，摸一张牌')
-            else:
-                self.add_log(f'「{p["name"]}」只剩王牌无法出牌且牌堆已空，跳过')
+            self.add_log(f'「{p["name"]}」只剩王牌无法单出，跳过（不摸牌）')
             self.last_action = time.time()
             self._advance()
             return None
@@ -446,13 +439,15 @@ class Game:
             jk = sum(1 for c in p['hand'] if c['rank'] >= 16)
             if p['pid'] == winner_pid:
                 row = {'pid': p['pid'], 'name': p['name'], 'rem': 0, 'jokers': 0,
-                       'mult': 1, 'pay': 0, 'delta': 0, 'win': True}
+                       'mult': 1, 'pay': 0, 'delta': 0, 'win': True, 'free': False}
             else:
                 mult = 2 * (2 ** jk) * (2 ** self.bombs)   # 输牌翻倍 × 王 × 炸弹
-                pay = rem * self.base * mult
+                free = rem == 1                            # 只剩一张牌免输
+                pay = 0 if free else rem * self.base * mult
                 pot += pay
                 row = {'pid': p['pid'], 'name': p['name'], 'rem': rem, 'jokers': jk,
-                       'mult': mult, 'pay': pay, 'delta': -pay, 'win': False}
+                       'mult': mult, 'pay': pay, 'delta': -pay, 'win': False,
+                       'free': free}
             rows.append(row)
         for row in rows:
             if row['win']:
@@ -568,9 +563,7 @@ class Game:
                 hand = sorted(me['hand'], key=lambda c: (c['rank'], c['suit']))
                 if is_turn:
                     if self.last:
-                        options = winning_plays(me['hand'], self.last['combo'])
-                        must_play = bool(options)
-                        can_pass = not must_play
+                        can_pass = True
                     else:
                         can_skip = not gen_plays(me['hand'])
                 you = {'pid': me['pid'], 'hand': hand, 'is_turn': is_turn,
