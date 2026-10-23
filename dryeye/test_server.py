@@ -32,7 +32,7 @@ class DryEyeRuleTests(unittest.TestCase):
         self.assertIsNone(game.act_pass(p2))
         self.assertEqual(game.turn, 0)
 
-    def test_single_joker_skips_without_drawing(self):
+    def test_single_joker_draws_then_skips(self):
         game = Game()
         p1, _ = game.join('甲', 'a')
         game.join('乙', 'b')
@@ -42,9 +42,26 @@ class DryEyeRuleTests(unittest.TestCase):
         game.deck = [card('c9', 9)]
 
         self.assertIsNone(game.act_skip(p1))
-        self.assertEqual(len(game.deck), 1)
-        self.assertEqual(len(game.player_by(p1)['hand']), 1)
+        self.assertEqual(len(game.deck), 0)
+        self.assertEqual(len(game.player_by(p1)['hand']), 2)
         self.assertEqual(game.turn, 1)
+
+    def test_unanswered_play_draws_when_leader_still_has_cards(self):
+        game = Game()
+        p1, _ = game.join('甲', 'a')
+        p2, _ = game.join('乙', 'b')
+        game.phase = 'play'
+        game.turn = 1
+        game.player_by(p1)['hand'] = [card('c9', 9)]
+        game.player_by(p2)['hand'] = [card('c4', 4)]
+        game.deck = [card('c10', 10)]
+        game.last = {'pid': p1, 'combo': ('single', 3, 1), 'cards': [card('c3', 3)]}
+
+        self.assertIsNone(game.act_pass(p2))
+        self.assertEqual(len(game.deck), 0)
+        self.assertEqual(len(game.player_by(p1)['hand']), 2)
+        self.assertIsNone(game.last)
+        self.assertEqual(game.turn, 0)
 
     def test_loser_with_one_card_pays_nothing(self):
         game = Game()

@@ -397,7 +397,7 @@ class Game:
             return None
 
     def act_skip(self, pid):
-        """首出但手里只有无法单出的王牌时，不摸牌，直接跳过。"""
+        """首出但手里只有无法单出的王牌时，摸一张牌并跳过。"""
         with self.lock:
             if self.phase != 'play':
                 return '当前不在对局中'
@@ -408,7 +408,12 @@ class Game:
             p = self.player_by(pid)
             if gen_plays(p['hand']):
                 return '你还有能出的牌'
-            self.add_log(f'「{p["name"]}」只剩王牌无法单出，跳过（不摸牌）')
+            if self.deck:
+                c = self.deck.pop()
+                p['hand'].append(c)
+                self.add_log(f'「{p["name"]}」只剩王牌无法单出，摸一张牌并跳过')
+            else:
+                self.add_log(f'「{p["name"]}」只剩王牌无法单出，但牌堆已空，只能跳过')
             self.last_action = time.time()
             self._advance()
             return None
